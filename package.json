@@ -1,0 +1,23 @@
+{
+  "name": "sitenavigator",
+  "version": "1.0.0",
+  "description": "This is a project that control browser with code",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "ts-node src/CLI/index.ts",
+    "build": "tsc",
+    "start": "node dist/CLI/index.js"
+  },
+  "keywords": [
+    "node.js",
+    "typescript"
+  ],
+  "author": "Mohammad Arkan",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^25.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
