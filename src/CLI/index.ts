@@ -23,7 +23,7 @@ rl.on('line', async (line) => {
     return;
   }
 
-  const result = dispatchIntent(parsed.intent, state);
+  const result = await dispatchIntent(parsed.intent, state);
 
   if (!result.success) {
     console.log(`Error: ${result.error}`);
