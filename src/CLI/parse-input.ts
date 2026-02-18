@@ -77,41 +77,22 @@ export function parseInput(line: string): ParseResult {
       };
     }
 
-    case "capture": {
-      if (args.length === 0) {
-        return { success: false, error: "capture requires a CSS selector" };
-      }
-
-      return {
-        success: true,
-        intent: {
-          type: "CAPTURE",
-          payload: { selector: args.join(" ") },
-        },
-      };
-    }
-
-    case "click": {
-      if (args.length === 0) {
-        return { success: false, error: "click requires a CSS selector" };
-      }
-
-      return {
-        success: true,
-        intent: {
-          type: "CLICK",
-          payload: { selector: args.join(" ") },
-        },
-      };
-    }
-
     case "help":
-      return { success: true, intent: { type: "HELP" } };
+      return {
+        success: true,
+        intent: { type: "HELP" }
+      };
 
     case "exit":
-      return { success: true, intent: { type: "EXIT" } };
+      return {
+        success: true,
+        intent: { type: "EXIT" }
+      };
 
     default:
-      return { success: false, error: `Unknown command: ${command}` };
+      return {
+        success: false,
+        error: `Unknown command: ${command}`
+      };
   }
 }

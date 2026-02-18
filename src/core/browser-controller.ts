@@ -96,11 +96,6 @@ export class BrowserController {
         }
     }
 
-    async content(): Promise<string> {
-        const page = await this.ensurePage();
-        return page.content();
-    }
-
     async close(): Promise<void> {
         if (this.page) {
             await this.page.close();

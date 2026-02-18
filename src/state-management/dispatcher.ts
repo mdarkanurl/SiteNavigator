@@ -8,8 +8,6 @@ export function dispatchIntent(
   state: AppState
 ): Promise<DispatchResult> | DispatchResult {
   switch (intent.type) {
-    case "CAPTURE":
-    case "CLICK":
     case "SHOW":
       if (!state.pageLoaded) {
         return {

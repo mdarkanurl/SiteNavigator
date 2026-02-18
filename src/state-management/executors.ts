@@ -20,18 +20,6 @@ export function executeIntent(
     case "SHOW":
       return browserController.showCode(intent.payload.fileName);
 
-    case "CAPTURE":
-      return {
-        success: true,
-        message: `Captured selector: ${intent.payload.selector}`,
-      };
-
-    case "CLICK":
-      return {
-        success: true,
-        message: `Clicked selector: ${intent.payload.selector}`,
-      };
-
     case "HELP":
       return {
         success: true,
