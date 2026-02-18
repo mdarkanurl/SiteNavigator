@@ -6,7 +6,7 @@ import { executeIntent } from "./executors";
 export function dispatchIntent(
   intent: Intent,
   state: AppState
-): DispatchResult {
+): Promise<DispatchResult> | DispatchResult {
   switch (intent.type) {
     case "CAPTURE":
     case "CLICK":

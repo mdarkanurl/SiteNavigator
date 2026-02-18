@@ -1,20 +1,21 @@
 import { AppState } from "./state";
 import { Intent } from "../CLI/intent";
+import { BrowserController } from "../core/browser-controller";
+import { DispatchResult } from "./dispatch-result";
+
+const browserController = new BrowserController();
 
 export function executeIntent(
   intent: Intent,
   state: AppState
-): { success: true; message?: string } {
+): Promise<DispatchResult> {
   switch (intent.type) {
     case "NAVIGATE":
       state.browserStarted = true;
       state.pageLoaded = true;
       state.currentUrl = intent.payload.url;
 
-      return {
-        success: true,
-        message: `Navigated to ${intent.payload.url}`,
-      };
+      return browserController.navigate(intent.payload.url);
 
     case "CAPTURE":
       return {
