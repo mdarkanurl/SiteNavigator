@@ -31,6 +31,7 @@ export type ShowIntent = {
   type: "SHOW";
   payload: {
     target: "code";
+    fileName: string
   };
 };
 

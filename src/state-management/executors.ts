@@ -8,7 +8,7 @@ const browserController = new BrowserController();
 export function executeIntent(
   intent: Intent,
   state: AppState
-): Promise<DispatchResult> {
+): Promise<DispatchResult> | DispatchResult {
   switch (intent.type) {
     case "NAVIGATE":
       state.browserStarted = true;
@@ -16,6 +16,9 @@ export function executeIntent(
       state.currentUrl = intent.payload.url;
 
       return browserController.navigate(intent.payload.url);
+
+    case "SHOW":
+      return browserController.showCode(intent.payload.fileName);
 
     case "CAPTURE":
       return {
@@ -27,12 +30,6 @@ export function executeIntent(
       return {
         success: true,
         message: `Clicked selector: ${intent.payload.selector}`,
-      };
-
-    case "SHOW":
-      return {
-        success: true,
-        message: `Showing page ${intent.payload.target}`,
       };
 
     case "HELP":

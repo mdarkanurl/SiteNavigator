@@ -1,6 +1,7 @@
 import { BrowserPool, PlaywrightPlugin } from '@crawlee/browser-pool';
 import playwright, { Page } from 'playwright';
 import { DispatchResult } from '../state-management/dispatch-result';
+import { writeFile } from 'node:fs';
 
 export const browserPool = new BrowserPool({
     browserPlugins: [
@@ -73,6 +74,31 @@ export class BrowserController {
             success: true,
             message: `navigate to ${url}`
         };
+    }
+
+    async showCode(fileName: string): Promise<DispatchResult> {
+        const page = await this.ensurePage();
+        const res = await page.content();
+        const finalFileName = fileName.replace('--', '');
+
+        writeFile(`${finalFileName}.html`, res, 'utf8', (err) => {
+            if(err) {
+                return {
+                    success: false,
+                    error: `Failed to save html to file`
+                }
+            }
+        });
+
+        return {
+            success: true,
+            message: `Here's the code: ${res}`
+        }
+    }
+
+    async content(): Promise<string> {
+        const page = await this.ensurePage();
+        return page.content();
     }
 
     async close(): Promise<void> {

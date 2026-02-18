@@ -46,6 +46,37 @@ export function parseInput(line: string): ParseResult {
       };
     }
 
+    case "show": {
+      if (args[0] !== "code") {
+        return {
+          success: false,
+          error: "show supports only: show code --fileName"
+        };
+      }
+
+      if(!args[1]) {
+        return {
+          success: false,
+          error: "show needs a file name where code will store"
+        };
+      }
+
+      if(!args[1].startsWith('--')) {
+        return {
+          success: false,
+          error: "file name must starts with --"
+        };
+      }
+
+      return {
+        success: true,
+        intent: {
+          type: "SHOW",
+          payload: { target: "code", fileName: args[1] },
+        },
+      };
+    }
+
     case "capture": {
       if (args.length === 0) {
         return { success: false, error: "capture requires a CSS selector" };
@@ -70,20 +101,6 @@ export function parseInput(line: string): ParseResult {
         intent: {
           type: "CLICK",
           payload: { selector: args.join(" ") },
-        },
-      };
-    }
-
-    case "show": {
-      if (args[0] !== "code") {
-        return { success: false, error: "show supports only: show code" };
-      }
-
-      return {
-        success: true,
-        intent: {
-          type: "SHOW",
-          payload: { target: "code" },
         },
       };
     }
