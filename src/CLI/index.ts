@@ -35,6 +35,10 @@ rl.on('line', async (line) => {
     console.log(result.message);
   }
 
+  if(result.data) {
+    console.log(result.data);
+  }
+
   if (parsed.intent.type === "EXIT") {
     rl.close();
     return;
