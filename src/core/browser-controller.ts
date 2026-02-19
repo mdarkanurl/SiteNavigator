@@ -45,7 +45,15 @@ export class BrowserController {
 
     async navigate(url: string): Promise<DispatchResult> {
         const page = await this.ensurePage();
-        const res = await page.goto(url);
+        let res: playwright.Response | null = null;
+        try {
+            res = await page.goto(url);
+        } catch (error) {
+            return {
+                success: false,
+                error: `Failed to navigate to ${url}`
+            };
+        }
 
         if(!res) {
             return {
@@ -92,8 +100,74 @@ export class BrowserController {
 
         return {
             success: true,
-            message: `Here's the code: ${res}`
+            message: `Check ${finalFileName}.html, you'll find code there.`
         }
+    }
+
+    async getAllElements(): Promise<DispatchResult> {
+        const page = await this.ensurePage();
+        const elements = await page.evaluate(() => {
+
+            function getSelector(el: Element): string {
+
+                // best case: ID (unique)
+                if (el.id) {
+                    return `#${el.id}`;
+                }
+
+                // second best: name attribute
+                const name = el.getAttribute("name");
+                if (name) {
+                    return `${el.tagName.toLowerCase()}[name="${name}"]`;
+                }
+
+                // third: href (for links)
+                const href = el.getAttribute("href");
+                if (href) {
+                    return `a[href="${href}"]`;
+                }
+
+                // fallback: class selector
+                if (el.className && typeof el.className === "string") {
+                    const classes = el.className.trim().split(/\s+/).join(".");
+                    return `${el.tagName.toLowerCase()}.${classes}`;
+                }
+
+                // worst case: tag only
+                return el.tagName.toLowerCase();
+            }
+
+            const interactive = document.querySelectorAll(`
+                a,
+                button,
+                input,
+                textarea,
+                select,
+                [onclick],
+                [role="button"]
+            `);
+
+            return Array.from(interactive)
+                .filter(el => {
+                    const element = el as HTMLElement;
+
+                    // only visible elements
+                    return element.offsetParent !== null;
+                })
+                .map((el, index) => ({
+                    index,
+                    type: el.tagName.toLowerCase(),
+                    text: el.textContent?.trim() || "",
+                    selector: getSelector(el),
+                    href: el.getAttribute("href")
+                }));
+        });
+
+        return {
+            success: true,
+            message: `Extracted ${elements.length} elements`,
+            data: elements
+        };
     }
 
     async close(): Promise<void> {
