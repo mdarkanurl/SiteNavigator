@@ -21,8 +21,11 @@ export function executeIntent(
       if(intent.payload.target === 'code') {
         return browserController.showCode(intent.payload.fileName);
       } else if(intent.payload.target === 'elements') {
-        return browserController.getAllElements();
+        return browserController.getAllElements(intent.payload.fileName);
       }
+
+    case "CLICK":
+      return browserController.clickOnAButton(intent.payload.target)
 
     case "HELP":
       return {

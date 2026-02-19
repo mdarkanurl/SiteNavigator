@@ -70,17 +70,25 @@ export function parseInput(line: string): ParseResult {
           },
         };
       } else if(args[0] === "elements") {
+
+        if(args[1] && !args[1].startsWith("--")) {
+          return {
+            success: false,
+            error: "file name must starts with --"
+          };
+        }
+        
         return {
           success: true,
           intent: {
             type: "SHOW",
-            payload: { target: "elements", },
+            payload: { target: "elements", fileName: args[1] },
           },
         };
       } else {
         return {
           success: false,
-          error: "show supports only: show code --fileName"
+          error: "show supports two command: show code --fileName & show elements"
         };
       }
     }

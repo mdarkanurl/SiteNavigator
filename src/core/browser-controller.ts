@@ -104,7 +104,7 @@ export class BrowserController {
         }
     }
 
-    async getAllElements(): Promise<DispatchResult> {
+    async getAllElements(fileName: string | null): Promise<DispatchResult> {
         const page = await this.ensurePage();
         const elements = await page.evaluate(() => {
 
@@ -162,6 +162,20 @@ export class BrowserController {
                     href: el.getAttribute("href")
                 }));
         });
+
+        if(fileName) {
+            const finalFileName = fileName.replace("--", "");
+            writeFile(`${finalFileName}.js`,
+                JSON.stringify(elements, null, 2),
+                'utf8', (err) => {
+                if(err) {
+                    return {
+                        success: false,
+                        error: `Failed to save elements to file`
+                    }
+                }
+            });
+        }
 
         return {
             success: true,
