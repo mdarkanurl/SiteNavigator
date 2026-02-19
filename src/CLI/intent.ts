@@ -2,6 +2,7 @@ export type Intent =
   | NavigateIntent
   | ShowCodeIntent
   | ShowElementsIntent
+  | ClickIntent
   | HelpIntent
   | ExitIntent;
 
@@ -24,6 +25,15 @@ export type ShowElementsIntent = {
   type: "SHOW";
   payload: {
     target: "elements";
+    fileName: string | null
+  };
+};
+
+export type ClickIntent = {
+  type: "CLICK";
+  payload: {
+    target: "click";
+    element: string
   };
 };
 

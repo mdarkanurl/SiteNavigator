@@ -93,6 +93,22 @@ export function parseInput(line: string): ParseResult {
       }
     }
 
+    case "click":
+      if(!args[0]) {
+        return {
+          success: false,
+          error: "To click somewhere you need to pass selector"
+        };
+      }
+
+      return {
+        success: true,
+        intent: {
+          type: "CLICK",
+          payload: { target: "click", element: args[0] },
+        },
+      };
+
     case "help":
       return {
         success: true,

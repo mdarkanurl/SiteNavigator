@@ -184,6 +184,56 @@ export class BrowserController {
         };
     }
 
+    async clickOnAButton(selector: string): Promise<DispatchResult> {
+        const page = await this.ensurePage();
+
+        try {
+            const element = await page.$(selector);
+            
+            if (!element) {
+                return {
+                    success: false,
+                    error: `Element not found: ${selector}`
+                };
+            }
+
+            const locator = page.locator(selector).first();
+
+            await locator.scrollIntoViewIfNeeded();
+
+            await locator.waitFor({
+                state: "visible",
+                timeout: 10000
+            });
+
+            const oldUrl = page.url();
+
+            await Promise.all([
+                page.click(selector),
+                page.waitForLoadState("domcontentloaded").catch(() => {})
+            ]);
+
+            const newUrl = page.url();
+
+            return {
+                success: true,
+                message: "Click successful",
+                data: {
+                    selector,
+                    navigated: oldUrl !== newUrl,
+                    oldUrl,
+                    newUrl
+                }
+            };
+
+        } catch (error) {
+            return {
+                success: false,
+                error: `Click failed.`
+            };
+        }
+    }
+
     async close(): Promise<void> {
         if (this.page) {
             await this.page.close();

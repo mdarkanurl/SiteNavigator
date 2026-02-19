@@ -23,9 +23,10 @@ export function executeIntent(
       } else if(intent.payload.target === 'elements') {
         return browserController.getAllElements(intent.payload.fileName);
       }
+      return { success: false, error: "Invalid SHOW target" };
 
     case "CLICK":
-      return browserController.clickOnAButton(intent.payload.target)
+      return browserController.clickOnAButton(intent.payload.element)
 
     case "HELP":
       return {

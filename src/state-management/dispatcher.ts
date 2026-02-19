@@ -9,6 +9,7 @@ export function dispatchIntent(
 ): Promise<DispatchResult> | DispatchResult {
   switch (intent.type) {
     case "SHOW":
+    case "CLICK":
       if (!state.pageLoaded) {
         return {
           success: false,
