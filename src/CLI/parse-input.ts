@@ -47,34 +47,42 @@ export function parseInput(line: string): ParseResult {
     }
 
     case "show": {
-      if (args[0] !== "code") {
+      if (args[0] === "code") {
+        if(!args[1]) {
+          return {
+            success: false,
+            error: "show needs a file name where code will store"
+          };
+        }
+
+        if(!args[1].startsWith('--')) {
+          return {
+            success: false,
+            error: "file name must starts with --"
+          };
+        }
+
+        return {
+          success: true,
+          intent: {
+            type: "SHOW",
+            payload: { target: "code", fileName: args[1] },
+          },
+        };
+      } else if(args[0] === "elements") {
+        return {
+          success: true,
+          intent: {
+            type: "SHOW",
+            payload: { target: "elements", },
+          },
+        };
+      } else {
         return {
           success: false,
           error: "show supports only: show code --fileName"
         };
       }
-
-      if(!args[1]) {
-        return {
-          success: false,
-          error: "show needs a file name where code will store"
-        };
-      }
-
-      if(!args[1].startsWith('--')) {
-        return {
-          success: false,
-          error: "file name must starts with --"
-        };
-      }
-
-      return {
-        success: true,
-        intent: {
-          type: "SHOW",
-          payload: { target: "code", fileName: args[1] },
-        },
-      };
     }
 
     case "help":

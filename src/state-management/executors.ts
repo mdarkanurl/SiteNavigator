@@ -18,7 +18,11 @@ export function executeIntent(
       return browserController.navigate(intent.payload.url);
 
     case "SHOW":
-      return browserController.showCode(intent.payload.fileName);
+      if(intent.payload.target === 'code') {
+        return browserController.showCode(intent.payload.fileName);
+      } else if(intent.payload.target === 'elements') {
+        return browserController.getAllElements();
+      }
 
     case "HELP":
       return {

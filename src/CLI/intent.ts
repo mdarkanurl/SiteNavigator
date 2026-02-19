@@ -1,6 +1,7 @@
 export type Intent =
   | NavigateIntent
-  | ShowIntent
+  | ShowCodeIntent
+  | ShowElementsIntent
   | HelpIntent
   | ExitIntent;
 
@@ -11,11 +12,18 @@ export type NavigateIntent = {
   };
 };
 
-export type ShowIntent = {
+export type ShowCodeIntent = {
   type: "SHOW";
   payload: {
     target: "code";
     fileName: string
+  };
+};
+
+export type ShowElementsIntent = {
+  type: "SHOW";
+  payload: {
+    target: "elements";
   };
 };
 
