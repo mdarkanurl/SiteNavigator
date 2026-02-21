@@ -14,6 +14,7 @@ export function dispatchIntent(
     case "MOVE_FORWARD":
     case "RELOAD":
     case "PRINT":
+    case "SCREENSHOT":
       if (!state.pageLoaded) {
         return {
           success: false,

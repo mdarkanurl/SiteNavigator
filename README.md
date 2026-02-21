@@ -14,6 +14,7 @@ It uses Playwright (via Crawlee's `BrowserPool`) to navigate websites, inspect p
 - Reload the current page (`reload`)
 - Print current page URL (`print url`)
 - Print current page title (`print title`)
+- Save current viewport screenshot (`screenshot --<fileName>`)
 - Simple command parsing + state guard to prevent actions before a page is loaded
 
 ## Tech Stack
@@ -94,6 +95,9 @@ npm start
 `print title`
 - Prints current page title
 
+`screenshot --<fileName>`
+- Saves current viewport image to `<fileName>.png`
+
 `help`
 - Prints available commands
 
@@ -126,7 +130,7 @@ Goodbye!
 ## Notes and Current Behavior
 
 - Browser launches in headed mode (`headless: false`).
-- `SHOW`, `CLICK`, `MOVE_BACK`, `MOVE_FORWARD`, `RELOAD`, and `PRINT` are blocked until at least one successful `navigate` command is issued.
+- `SHOW`, `CLICK`, `MOVE_BACK`, `MOVE_FORWARD`, `RELOAD`, `PRINT`, and `SCREENSHOT` are blocked until at least one successful `navigate` command is issued.
 - `Dockerfile` exists but is currently empty.
 - Project currently has no automated tests (`npm test` is a placeholder).
 

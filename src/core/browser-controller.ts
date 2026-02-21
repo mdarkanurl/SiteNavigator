@@ -330,6 +330,27 @@ export class BrowserController {
     };
   }
 
+  async screenshot(fileName: string): Promise<DispatchResult> {
+    const page = await this.ensurePage();
+    const finalFileName = fileName.replace("--", "");
+
+    try {
+      await page.screenshot({
+        path: `${finalFileName}.png`,
+      });
+    } catch (error) {
+      return {
+        success: false,
+        error: "Failed to take screenshot",
+      };
+    }
+
+    return {
+      success: true,
+      message: `Screenshot saved to ${finalFileName}.png`,
+    };
+  }
+
   async close(): Promise<void> {
     if (this.page) {
       await this.page.close();

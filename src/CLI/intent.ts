@@ -7,6 +7,7 @@ export type Intent =
   | MoveForwardIntent
   | ReloadIntent
   | PrintIntent
+  | ScreenshotIntent
   | HelpIntent
   | ExitIntent;
 
@@ -57,6 +58,13 @@ export type PrintIntent = {
   type: "PRINT";
   payload: {
     target: "url" | "title";
+  };
+};
+
+export type ScreenshotIntent = {
+  type: "SCREENSHOT";
+  payload: {
+    fileName: string;
   };
 };
 

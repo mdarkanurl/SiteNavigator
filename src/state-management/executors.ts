@@ -45,10 +45,13 @@ export function executeIntent(
       }
       return { success: false, error: "Invalid PRINT target" };
 
+    case "SCREENSHOT":
+      return browserController.screenshot(intent.payload.fileName);
+
     case "HELP":
       return {
         success: true,
-        message: "Available commands: navigate, click, show, move back, move forward, reload, print url, print title, help, exit",
+        message: "Available commands: navigate, click, show, move back, move forward, reload, print url, print title, screenshot, help, exit",
       };
 
     case "EXIT":
