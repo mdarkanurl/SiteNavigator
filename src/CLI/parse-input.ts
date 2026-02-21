@@ -124,6 +124,12 @@ export function parseInput(line: string): ParseResult {
       };
     }
 
+    case "reload":
+      return {
+        success: true,
+        intent: { type: "RELOAD" }
+      };
+
     case "help":
       return {
         success: true,

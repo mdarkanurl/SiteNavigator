@@ -5,6 +5,7 @@ export type Intent =
   | ClickIntent
   | MoveBackIntent
   | MoveForwardIntent
+  | ReloadIntent
   | HelpIntent
   | ExitIntent;
 
@@ -45,6 +46,10 @@ export type MoveBackIntent = {
 
 export type MoveForwardIntent = {
   type: "MOVE_FORWARD";
+};
+
+export type ReloadIntent = {
+  type: "RELOAD";
 };
 
 export type HelpIntent = {

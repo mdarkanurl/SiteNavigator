@@ -268,6 +268,48 @@ export class BrowserController {
         };
     }
 
+    async reload(): Promise<DispatchResult> {
+        const page = await this.ensurePage();
+        let res: playwright.Response | null = null;
+
+        try {
+            res = await page.reload();
+        } catch (error) {
+            return {
+                success: false,
+                error: `Failed to reload the current page`
+            };
+        }
+
+        if(!res) {
+            return {
+                success: false,
+                error: `Failed to reload the current page`
+            };
+        }
+
+        const isFinished = await res.finished();
+        if(isFinished) {
+            return {
+                success: false,
+                error: `Failed to reload the current page. Here's the error: ${isFinished}`
+            };
+        }
+
+        const isOk = res.ok();
+        if(!isOk) {
+            return {
+                success: false,
+                error: `Website response was not successful`
+            }
+        }
+
+        return {
+            success: true,
+            message: `Reloaded current page successfully`
+        };
+    }
+
     async close(): Promise<void> {
         if (this.page) {
             await this.page.close();

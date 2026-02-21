@@ -11,6 +11,7 @@ It uses Playwright (via Crawlee's `BrowserPool`) to navigate websites, inspect p
 - Click an element by CSS selector
 - Move one step back in browser history (`move back`)
 - Move one step forward in browser history (`move forward`)
+- Reload the current page (`reload`)
 - Simple command parsing + state guard to prevent actions before a page is loaded
 
 ## Tech Stack
@@ -82,6 +83,9 @@ npm start
 `move forward`
 - Moves one step forward in browser history
 
+`reload`
+- Reloads the current page
+
 `help`
 - Prints available commands
 
@@ -114,7 +118,7 @@ Goodbye!
 ## Notes and Current Behavior
 
 - Browser launches in headed mode (`headless: false`).
-- `SHOW`, `CLICK`, and `MOVE_BACK` are blocked until at least one successful `navigate` command is issued.
+- `SHOW`, `CLICK`, `MOVE_BACK`, `MOVE_FORWARD`, and `RELOAD` are blocked until at least one successful `navigate` command is issued.
 - `Dockerfile` exists but is currently empty.
 - Project currently has no automated tests (`npm test` is a placeholder).
 

@@ -34,10 +34,13 @@ export function executeIntent(
     case "MOVE_FORWARD":
       return browserController.moveForward();
 
+    case "RELOAD":
+      return browserController.reload();
+
     case "HELP":
       return {
         success: true,
-        message: "Available commands: navigate, click, show, move back, move forward, help, exit",
+        message: "Available commands: navigate, click, show, move back, move forward, reload, help, exit",
       };
 
     case "EXIT":
