@@ -11,11 +11,23 @@ export function executeIntent(
 ): Promise<DispatchResult> | DispatchResult {
   switch (intent.type) {
     case "NAVIGATE":
-      state.browserStarted = true;
-      state.pageLoaded = true;
-      state.currentUrl = intent.payload.url;
+      return browserController.navigate(intent.payload.url).then((result) => {
+        if (result.success) {
+          state.browserStarted = true;
+          state.pageLoaded = true;
+          state.currentUrl = intent.payload.url;
+        }
+        return result;
+      });
 
-      return browserController.navigate(intent.payload.url);
+    case "OPEN":
+      return browserController.open(intent.payload.target).then((result) => {
+        if (result.success) {
+          state.browserStarted = true;
+          state.pageLoaded = true;
+        }
+        return result;
+      });
 
     case "SHOW":
       if (intent.payload.target === "code") {
@@ -26,7 +38,16 @@ export function executeIntent(
       return { success: false, error: "Invalid SHOW target" };
 
     case "CLICK":
-      return browserController.clickOnAButton(intent.payload.element);
+      return browserController.click(intent.payload.target);
+
+    case "LINKS":
+      return browserController.listLinks(intent.payload.filter);
+
+    case "FOLLOW":
+      return browserController.follow(intent.payload.pattern);
+
+    case "ACT":
+      return browserController.act(intent.payload.id);
 
     case "MOVE_BACK":
       return browserController.moveBack();
@@ -51,7 +72,7 @@ export function executeIntent(
     case "HELP":
       return {
         success: true,
-        message: "Available commands: navigate, click, show, move back, move forward, reload, print url, print title, screenshot, help, exit",
+        message: "Available commands: navigate, open, links, follow, act, click, show, move back, move forward, reload, print url, print title, screenshot, help, exit",
       };
 
     case "EXIT":

@@ -1,5 +1,15 @@
+import { tokenize } from "../utils/tokenize";
 import { ParseResult } from "./parse-result";
-import { URL } from "url";
+import { parseNavigate } from "./parsers/parse-navigate";
+import { parseOpen } from "./parsers/parse-open";
+import { parseShow } from "./parsers/parse-show";
+import { parseClick } from "./parsers/parse-click";
+import { parseLinks } from "./parsers/parse-links";
+import { parseFollow } from "./parsers/parse-follow";
+import { parseAct } from "./parsers/parse-act";
+import { parseMove } from "./parsers/parse-move";
+import { parsePrint } from "./parsers/parse-print";
+import { parseScreenshot } from "./parsers/parse-screenshot";
 
 export function parseInput(line: string): ParseResult {
   const trimmed = line.trim();
@@ -11,117 +21,34 @@ export function parseInput(line: string): ParseResult {
     };
   }
 
-  const tokens = trimmed.split(" ");
+  const tokens = tokenize(trimmed);
   const command = tokens[0];
   const args = tokens.slice(1);
 
   switch (command) {
-    case "navigate": {
-      if (args.length === 0) {
-        return { success: false, error: "navigate requires a URL" };
-      }
+    case "navigate":
+      return parseNavigate(args);
 
-      let url: URL;
-      try {
-        url = new URL(args[0]);
-      } catch (error) {
-        return { success: false, error: "Invalid URL" };
-      }
+    case "open":
+      return parseOpen(args);
 
-      if (url.protocol !== "http:"
-        && url.protocol !== "https:") {
-        return {
-          success: false,
-          error: "Invalid URL protocol. Only http and https are allowed.",
-        };
-      }
+    case "show":
+      return parseShow(args);
 
-      return {
-        success: true,
-        intent: {
-          type: "NAVIGATE",
-          payload: { url: url.toString() },
-        },
-      };
-    }
+    case "click":
+      return parseClick(args);
 
-    case "show": {
-      if (args[0] === "code") {
-        if (!args[1]) {
-          return {
-            success: false,
-            error: "show needs a file name where code will be stored",
-          };
-        }
+    case "links":
+      return parseLinks(args);
 
-        if (!args[1].startsWith("--")) {
-          return {
-            success: false,
-            error: "file name must start with --",
-          };
-        }
+    case "follow":
+      return parseFollow(args);
 
-        return {
-          success: true,
-          intent: {
-            type: "SHOW",
-            payload: { target: "code", fileName: args[1] },
-          },
-        };
-      } else if (args[0] === "elements") {
+    case "act":
+      return parseAct(args);
 
-        if (args[1] && !args[1].startsWith("--")) {
-          return {
-            success: false,
-            error: "file name must start with --",
-          };
-        }
-
-        return {
-          success: true,
-          intent: {
-            type: "SHOW",
-            payload: { target: "elements", fileName: args[1] ?? null },
-          },
-        };
-      } else {
-        return {
-          success: false,
-          error: "show supports two commands: show code --fileName & show elements",
-        };
-      }
-    }
-
-    case "click": {
-      if (!args[0]) {
-        return {
-          success: false,
-          error: "To click somewhere, you need to pass a selector",
-        };
-      }
-
-      return {
-        success: true,
-        intent: {
-          type: "CLICK",
-          payload: { target: "click", element: args[0] },
-        },
-      };
-    }
-
-    case "move": {
-      if (args[0] !== "back" && args[0] !== "forward") {
-        return {
-          success: false,
-          error: "move supports two commands: move back & move forward",
-        };
-      }
-
-      return {
-        success: true,
-        intent: { type: args[0] === "back" ? "MOVE_BACK" : "MOVE_FORWARD" },
-      };
-    }
+    case "move":
+      return parseMove(args);
 
     case "reload":
       return {
@@ -129,46 +56,11 @@ export function parseInput(line: string): ParseResult {
         intent: { type: "RELOAD" },
       };
 
-    case "print": {
-      if (args[0] !== "url" && args[0] !== "title") {
-        return {
-          success: false,
-          error: "print supports two commands: print url & print title",
-        };
-      }
+    case "print":
+      return parsePrint(args);
 
-      return {
-        success: true,
-        intent: {
-          type: "PRINT",
-          payload: { target: args[0] === "url" ? "url" : "title" },
-        },
-      };
-    }
-
-    case "screenshot": {
-      if (!args[0]) {
-        return {
-          success: false,
-          error: "screenshot needs a file name where image will be stored",
-        };
-      }
-
-      if (!args[0].startsWith("--")) {
-        return {
-          success: false,
-          error: "file name must start with --",
-        };
-      }
-
-      return {
-        success: true,
-        intent: {
-          type: "SCREENSHOT",
-          payload: { fileName: args[0] },
-        },
-      };
-    }
+    case "screenshot":
+      return parseScreenshot(args);
 
     case "help":
       return {

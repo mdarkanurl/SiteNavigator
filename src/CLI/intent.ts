@@ -1,8 +1,12 @@
 export type Intent =
   | NavigateIntent
+  | OpenIntent
   | ShowCodeIntent
   | ShowElementsIntent
   | ClickIntent
+  | LinksIntent
+  | FollowIntent
+  | ActIntent
   | MoveBackIntent
   | MoveForwardIntent
   | ReloadIntent
@@ -15,6 +19,13 @@ export type NavigateIntent = {
   type: "NAVIGATE";
   payload: {
     url: string;
+  };
+};
+
+export type OpenIntent = {
+  type: "OPEN";
+  payload: {
+    target: string;
   };
 };
 
@@ -37,8 +48,32 @@ export type ShowElementsIntent = {
 export type ClickIntent = {
   type: "CLICK";
   payload: {
-    target: "click";
-    element: string;
+    target:
+      | { mode: "selector"; value: string }
+      | { mode: "text"; value: string }
+      | { mode: "href"; value: string }
+      | { mode: "index"; value: number };
+  };
+};
+
+export type LinksIntent = {
+  type: "LINKS";
+  payload: {
+    filter: string | null;
+  };
+};
+
+export type FollowIntent = {
+  type: "FOLLOW";
+  payload: {
+    pattern: string;
+  };
+};
+
+export type ActIntent = {
+  type: "ACT";
+  payload: {
+    id: number;
   };
 };
 

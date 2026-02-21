@@ -10,6 +10,9 @@ export function dispatchIntent(
   switch (intent.type) {
     case "SHOW":
     case "CLICK":
+    case "LINKS":
+    case "FOLLOW":
+    case "ACT":
     case "MOVE_BACK":
     case "MOVE_FORWARD":
     case "RELOAD":

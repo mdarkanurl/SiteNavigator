@@ -6,9 +6,12 @@ It uses Playwright (via Crawlee's `BrowserPool`) to navigate websites, inspect p
 ## Features
 
 - Navigate to a URL from the CLI
+- Open absolute URLs or relative paths from current page (`open`)
 - Show current page HTML and save it to a file
 - Extract visible interactive elements and optionally save them to a file
-- Click an element by CSS selector
+- List interactive elements with IDs (`links`) and execute by ID (`act`)
+- Follow links by partial href/text pattern (`follow`)
+- Click by selector, text, href, or index (`click` modes)
 - Move one step back in browser history (`move back`)
 - Move one step forward in browser history (`move forward`)
 - Reload the current page (`reload`)
@@ -67,6 +70,10 @@ npm start
 - Opens the URL in the browser
 - Only `http` and `https` are accepted
 
+`open <url-or-relative-path>`
+- Opens an absolute URL directly
+- Resolves relative paths against current page URL
+
 `show code --<fileName>`
 - Gets current page HTML
 - Saves to `<fileName>.html`
@@ -79,6 +86,28 @@ npm start
 `click <selector>`
 - Clicks first matching element for the selector
 - Returns whether navigation happened
+
+`click --selector "<css>"`
+- Clicks by CSS selector
+
+`click --text "<text>"`
+- Clicks first visible interactive element matching text
+
+`click --href "<href-fragment>"`
+- Clicks first link with matching href fragment
+
+`click --index <id>`
+- Clicks element by ID from latest `links` output
+
+`links [--filter "<query>"]`
+- Lists visible interactive elements (`a`, `button`, inputs, role=button, etc.)
+- Returns stable IDs for this snapshot (used by `act`)
+
+`act <id>`
+- Clicks/navigates using ID from latest `links` result
+
+`follow "<pattern>"`
+- Finds first anchor matching text/href pattern and navigates to it
 
 `move back`
 - Moves one step back in browser history
@@ -114,8 +143,15 @@ navigate to https://example.com/
 Extracted 3 elements
 [ ... ]
 
-> click a[href="https://www.iana.org/domains/example"]
-Click successful
+> links --filter iana
+Found 1 interactive elements
+[ { id: 0, ... } ]
+
+> act 0
+Action successful
+
+> click --text "More information"
+Action successful
 
 > move back
 Moved back successfully
