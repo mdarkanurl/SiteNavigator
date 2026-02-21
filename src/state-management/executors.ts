@@ -18,15 +18,15 @@ export function executeIntent(
       return browserController.navigate(intent.payload.url);
 
     case "SHOW":
-      if(intent.payload.target === 'code') {
+      if (intent.payload.target === "code") {
         return browserController.showCode(intent.payload.fileName);
-      } else if(intent.payload.target === 'elements') {
+      } else if (intent.payload.target === "elements") {
         return browserController.getAllElements(intent.payload.fileName);
       }
       return { success: false, error: "Invalid SHOW target" };
 
     case "CLICK":
-      return browserController.clickOnAButton(intent.payload.element)
+      return browserController.clickOnAButton(intent.payload.element);
 
     case "MOVE_BACK":
       return browserController.moveBack();

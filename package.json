@@ -1,7 +1,7 @@
 {
   "name": "sitenavigator",
   "version": "1.0.0",
-  "description": "This is a project that control browser with code",
+  "description": "This is a project that controls a browser with code",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

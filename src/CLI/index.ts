@@ -1,20 +1,20 @@
 import { createInterface } from "readline";
-import { stdin as input, stdout as output } from 'process';
+import { stdin as input, stdout as output } from "process";
 import { parseInput } from "./parse-input";
 import { dispatchIntent } from "../state-management/dispatcher";
 import { createInitialState } from "../state-management/state";
 
 const rl = createInterface({
-    input,
-    output,
-    prompt: '> ',
+  input,
+  output,
+  prompt: "> ",
 });
 
 const state = createInitialState();
 
 rl.prompt();
 
-rl.on('line', async (line) => {
+rl.on("line", async (line) => {
   const parsed = parseInput(line);
 
   if (!parsed.success) {
@@ -35,7 +35,7 @@ rl.on('line', async (line) => {
     console.log(result.message);
   }
 
-  if(result.data) {
+  if (result.data) {
     console.log(result.data);
   }
 
@@ -46,7 +46,7 @@ rl.on('line', async (line) => {
   rl.prompt();
 });
 
-rl.on('close', () => {
-  console.log('Goodbye!');
+rl.on("close", () => {
+  console.log("Goodbye!");
   process.exit(0);
 });

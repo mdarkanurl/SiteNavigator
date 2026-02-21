@@ -21,7 +21,7 @@ export type ShowCodeIntent = {
   type: "SHOW";
   payload: {
     target: "code";
-    fileName: string
+    fileName: string;
   };
 };
 
@@ -29,7 +29,7 @@ export type ShowElementsIntent = {
   type: "SHOW";
   payload: {
     target: "elements";
-    fileName: string | null
+    fileName: string | null;
   };
 };
 
@@ -37,7 +37,7 @@ export type ClickIntent = {
   type: "CLICK";
   payload: {
     target: "click";
-    element: string
+    element: string;
   };
 };
 

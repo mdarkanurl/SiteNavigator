@@ -1,112 +1,112 @@
-import { BrowserPool, PlaywrightPlugin } from '@crawlee/browser-pool';
-import playwright, { Page } from 'playwright';
-import { DispatchResult } from '../state-management/dispatch-result';
-import { writeFile } from 'node:fs';
+import { BrowserPool, PlaywrightPlugin } from "@crawlee/browser-pool";
+import playwright, { Page } from "playwright";
+import { DispatchResult } from "../state-management/dispatch-result";
+import { writeFile } from "node:fs";
 
 export const browserPool = new BrowserPool({
-    browserPlugins: [
-        new PlaywrightPlugin(playwright.chromium, {
-            launchOptions: {
-                headless: false,
-            },
-        }),
-    ],
+  browserPlugins: [
+    new PlaywrightPlugin(playwright.chromium, {
+      launchOptions: {
+        headless: false,
+      },
+    }),
+  ],
 });
 
 export class BrowserController {
-    private page: Page | null = null;
-    private initializing: Promise<void> | null = null;
+  private page: Page | null = null;
+  private initializing: Promise<void> | null = null;
 
-    constructor() {}
+  constructor() {}
 
-    async init(): Promise<void> {
-        if (this.page) return;
+  async init(): Promise<void> {
+    if (this.page) return;
 
-        if (!this.initializing) {
-            this.initializing = (async () => {
-                this.page = await browserPool.newPage();
-            })();
-        }
-
-        await this.initializing;
+    if (!this.initializing) {
+      this.initializing = (async () => {
+        this.page = await browserPool.newPage();
+      })();
     }
 
-    private async ensurePage(): Promise<Page> {
-        if (!this.page) {
-            await this.init();
-        }
+    await this.initializing;
+  }
 
-        if (!this.page) {
-            throw new Error('Failed to initialize page');
-        }
-
-        return this.page;
+  private async ensurePage(): Promise<Page> {
+    if (!this.page) {
+      await this.init();
     }
 
-    async navigate(url: string): Promise<DispatchResult> {
-        const page = await this.ensurePage();
-        let res: playwright.Response | null = null;
-        try {
-            res = await page.goto(url);
-        } catch (error) {
-            return {
-                success: false,
-                error: `Failed to navigate to ${url}`
-            };
-        }
+    if (!this.page) {
+      throw new Error("Failed to initialize page");
+    }
 
-        if(!res) {
-            return {
-                success: false,
-                error: `Failed to navigate to ${url}`
-            };
-        }
+    return this.page;
+  }
 
-        const isFinished = await res.finished();
-        if(isFinished) {
-            return {
-                success: false,
-                error: `Failed to navigate to ${url}. Here's the error: ${isFinished}`
-            };
-        }
+  async navigate(url: string): Promise<DispatchResult> {
+    const page = await this.ensurePage();
+    let res: playwright.Response | null = null;
+    try {
+      res = await page.goto(url);
+    } catch (error) {
+      return {
+        success: false,
+        error: `Failed to navigate to ${url}`,
+      };
+    }
 
-        const isOk = res.ok();
-        if(!isOk) {
-            return {
-                success: false,
-                error: `Website response was not successful`
-            }
-        }
+    if (!res) {
+      return {
+        success: false,
+        error: `Failed to navigate to ${url}`,
+      };
+    }
 
+    const isFinished = await res.finished();
+    if (isFinished) {
+      return {
+        success: false,
+        error: `Failed to navigate to ${url}. Here's the error: ${isFinished}`,
+      };
+    }
+
+    const isOk = res.ok();
+    if (!isOk) {
+      return {
+        success: false,
+        error: "Website response was not successful",
+      };
+    }
+
+    return {
+      success: true,
+      message: `Navigate to ${url}`,
+    };
+  }
+
+  async showCode(fileName: string): Promise<DispatchResult> {
+    const page = await this.ensurePage();
+    const res = await page.content();
+    const finalFileName = fileName.replace("--", "");
+
+    writeFile(`${finalFileName}.html`, res, "utf8", (err) => {
+      if (err) {
         return {
-            success: true,
-            message: `navigate to ${url}`
+          success: false,
+          error: "Failed to save HTML to file",
         };
-    }
+      }
+    });
 
-    async showCode(fileName: string): Promise<DispatchResult> {
-        const page = await this.ensurePage();
-        const res = await page.content();
-        const finalFileName = fileName.replace('--', '');
+    return {
+      success: true,
+      message: `Check ${finalFileName}.html, you'll find code there.`,
+    };
+  }
 
-        writeFile(`${finalFileName}.html`, res, 'utf8', (err) => {
-            if(err) {
-                return {
-                    success: false,
-                    error: `Failed to save html to file`
-                }
-            }
-        });
-
-        return {
-            success: true,
-            message: `Check ${finalFileName}.html, you'll find code there.`
-        }
-    }
-
-    async getAllElements(fileName: string | null): Promise<DispatchResult> {
-        const page = await this.ensurePage();
-        const elements = await page.evaluate(() => {
+  async getAllElements(fileName: string | null): Promise<DispatchResult> {
+    const page = await this.ensurePage();
+    const elements = await page.evaluate(() => {
 
             function getSelector(el: Element): string {
 
@@ -147,196 +147,194 @@ export class BrowserController {
                 [role="button"]
             `);
 
-            return Array.from(interactive)
-                .filter(el => {
-                    const element = el as HTMLElement;
+      return Array.from(interactive)
+        .filter((el) => {
+          const element = el as HTMLElement;
 
                     // only visible elements
-                    return element.offsetParent !== null;
-                })
-                .map((el, index) => ({
-                    index,
-                    type: el.tagName.toLowerCase(),
-                    text: el.textContent?.trim() || "",
-                    selector: getSelector(el),
-                    href: el.getAttribute("href")
-                }));
-        });
+          return element.offsetParent !== null;
+        })
+        .map((el, index) => ({
+          index,
+          type: el.tagName.toLowerCase(),
+          text: el.textContent?.trim() || "",
+          selector: getSelector(el),
+          href: el.getAttribute("href"),
+        }));
+    });
 
-        if(fileName) {
-            const finalFileName = fileName.replace("--", "");
-            writeFile(`${finalFileName}.js`,
-                JSON.stringify(elements, null, 2),
-                'utf8', (err) => {
-                if(err) {
-                    return {
-                        success: false,
-                        error: `Failed to save elements to file`
-                    }
-                }
-            });
+    if (fileName) {
+      const finalFileName = fileName.replace("--", "");
+      writeFile(`${finalFileName}.js`, JSON.stringify(elements, null, 2), "utf8", (err) => {
+        if (err) {
+          return {
+            success: false,
+            error: "Failed to save elements to file",
+          };
         }
-
-        return {
-            success: true,
-            message: `Extracted ${elements.length} elements`,
-            data: elements
-        };
+      });
     }
+
+    return {
+      success: true,
+      message: `Extracted ${elements.length} elements`,
+      data: elements,
+    };
+  }
 
     async clickOnAButton(selector: string): Promise<DispatchResult> {
         const page = await this.ensurePage();
 
         try {
-            const element = await page.$(selector);
-            
-            if (!element) {
-                return {
-                    success: false,
-                    error: `Element not found: ${selector}`
-                };
-            }
+      const element = await page.$(selector);
+
+      if (!element) {
+        return {
+          success: false,
+          error: `Element not found: ${selector}`,
+        };
+      }
 
             const locator = page.locator(selector).first();
 
             await locator.scrollIntoViewIfNeeded();
 
-            await locator.waitFor({
-                state: "visible",
-                timeout: 10000
-            });
+      await locator.waitFor({
+        state: "visible",
+        timeout: 10000,
+      });
 
             const oldUrl = page.url();
 
-            await Promise.all([
-                page.click(selector),
-                page.waitForLoadState("domcontentloaded").catch(() => {})
-            ]);
+      await Promise.all([
+        page.click(selector),
+        page.waitForLoadState("domcontentloaded").catch(() => {}),
+      ]);
 
             const newUrl = page.url();
 
-            return {
-                success: true,
-                message: "Click successful",
-                data: {
-                    selector,
-                    navigated: oldUrl !== newUrl,
-                    oldUrl,
-                    newUrl
-                }
-            };
+      return {
+        success: true,
+        message: "Click successful",
+        data: {
+          selector,
+          navigated: oldUrl !== newUrl,
+          oldUrl,
+          newUrl,
+        },
+      };
 
-        } catch (error) {
-            return {
-                success: false,
-                error: `Click failed.`
-            };
-        }
+    } catch (error) {
+      return {
+        success: false,
+        error: "Click failed.",
+      };
+    }
+  }
+
+  async moveBack(): Promise<DispatchResult> {
+    const page = await this.ensurePage();
+    const res = await page.goBack();
+
+    if (!res) {
+      return {
+        success: false,
+        error: "Cannot move back from the current page",
+      };
     }
 
-    async moveBack(): Promise<DispatchResult> {
-        const page = await this.ensurePage();
-        const res = await page.goBack();
+    return {
+      success: true,
+      message: "Moved back successfully",
+    };
+  }
 
-        if (!res) {
-            return {
-                success: false,
-                error: `Cannot move back from the current page`
-            };
-        }
+  async moveForward(): Promise<DispatchResult> {
+    const page = await this.ensurePage();
+    const res = await page.goForward();
 
-        return {
-            success: true,
-            message: `Moved back successfully`
-        };
+    if (!res) {
+      return {
+        success: false,
+        error: "Cannot move forward from the current page",
+      };
     }
 
-    async moveForward(): Promise<DispatchResult> {
-        const page = await this.ensurePage();
-        const res = await page.goForward();
+    return {
+      success: true,
+      message: "Moved forward successfully",
+    };
+  }
 
-        if (!res) {
-            return {
-                success: false,
-                error: `Cannot move forward from the current page`
-            };
-        }
+  async reload(): Promise<DispatchResult> {
+    const page = await this.ensurePage();
+    let res: playwright.Response | null = null;
 
-        return {
-            success: true,
-            message: `Moved forward successfully`
-        };
+    try {
+      res = await page.reload();
+    } catch (error) {
+      return {
+        success: false,
+        error: "Failed to reload the current page",
+      };
     }
 
-    async reload(): Promise<DispatchResult> {
-        const page = await this.ensurePage();
-        let res: playwright.Response | null = null;
-
-        try {
-            res = await page.reload();
-        } catch (error) {
-            return {
-                success: false,
-                error: `Failed to reload the current page`
-            };
-        }
-
-        if(!res) {
-            return {
-                success: false,
-                error: `Failed to reload the current page`
-            };
-        }
-
-        const isFinished = await res.finished();
-        if(isFinished) {
-            return {
-                success: false,
-                error: `Failed to reload the current page. Here's the error: ${isFinished}`
-            };
-        }
-
-        const isOk = res.ok();
-        if(!isOk) {
-            return {
-                success: false,
-                error: `Website response was not successful`
-            }
-        }
-
-        return {
-            success: true,
-            message: `Reloaded current page successfully`
-        };
+    if (!res) {
+      return {
+        success: false,
+        error: "Failed to reload the current page",
+      };
     }
 
-    async getCurrentUrl(): Promise<DispatchResult> {
-        const page = await this.ensurePage();
-        const url = page.url();
-
-        return {
-            success: true,
-            message: `Current URL`,
-            data: url
-        };
+    const isFinished = await res.finished();
+    if (isFinished) {
+      return {
+        success: false,
+        error: `Failed to reload the current page. Here's the error: ${isFinished}`,
+      };
     }
 
-    async getCurrentTitle(): Promise<DispatchResult> {
-        const page = await this.ensurePage();
-        const title = await page.title();
-
-        return {
-            success: true,
-            message: `Current title`,
-            data: title
-        };
+    const isOk = res.ok();
+    if (!isOk) {
+      return {
+        success: false,
+        error: "Website response was not successful",
+      };
     }
 
-    async close(): Promise<void> {
-        if (this.page) {
-            await this.page.close();
-            this.page = null;
-            this.initializing = null;
-        }
+    return {
+      success: true,
+      message: "Reloaded current page successfully",
+    };
+  }
+
+  async getCurrentUrl(): Promise<DispatchResult> {
+    const page = await this.ensurePage();
+    const url = page.url();
+
+    return {
+      success: true,
+      message: "Current URL",
+      data: url,
+    };
+  }
+
+  async getCurrentTitle(): Promise<DispatchResult> {
+    const page = await this.ensurePage();
+    const title = await page.title();
+
+    return {
+      success: true,
+      message: "Current title",
+      data: title,
+    };
+  }
+
+  async close(): Promise<void> {
+    if (this.page) {
+      await this.page.close();
+      this.page = null;
+      this.initializing = null;
     }
+  }
 }
