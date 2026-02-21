@@ -10,6 +10,7 @@ It uses Playwright (via Crawlee's `BrowserPool`) to navigate websites, inspect p
 - Extract visible interactive elements and optionally save them to a file
 - Click an element by CSS selector
 - Move one step back in browser history (`move back`)
+- Move one step forward in browser history (`move forward`)
 - Simple command parsing + state guard to prevent actions before a page is loaded
 
 ## Tech Stack
@@ -77,6 +78,9 @@ npm start
 
 `move back`
 - Moves one step back in browser history
+
+`move forward`
+- Moves one step forward in browser history
 
 `help`
 - Prints available commands

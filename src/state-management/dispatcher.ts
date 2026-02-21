@@ -11,6 +11,7 @@ export function dispatchIntent(
     case "SHOW":
     case "CLICK":
     case "MOVE_BACK":
+    case "MOVE_FORWARD":
       if (!state.pageLoaded) {
         return {
           success: false,

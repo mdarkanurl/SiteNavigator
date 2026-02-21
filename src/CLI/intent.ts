@@ -4,6 +4,7 @@ export type Intent =
   | ShowElementsIntent
   | ClickIntent
   | MoveBackIntent
+  | MoveForwardIntent
   | HelpIntent
   | ExitIntent;
 
@@ -40,6 +41,10 @@ export type ClickIntent = {
 
 export type MoveBackIntent = {
   type: "MOVE_BACK";
+};
+
+export type MoveForwardIntent = {
+  type: "MOVE_FORWARD";
 };
 
 export type HelpIntent = {

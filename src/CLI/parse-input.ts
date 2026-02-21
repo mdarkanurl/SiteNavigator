@@ -111,16 +111,16 @@ export function parseInput(line: string): ParseResult {
     }
 
     case "move": {
-      if (args[0] !== "back") {
+      if (args[0] !== "back" && args[0] !== "forward") {
         return {
           success: false,
-          error: "move supports one command: move back"
+          error: "move supports two commands: move back & move forward"
         };
       }
 
       return {
         success: true,
-        intent: { type: "MOVE_BACK" }
+        intent: { type: args[0] === "back" ? "MOVE_BACK" : "MOVE_FORWARD" }
       };
     }
 
