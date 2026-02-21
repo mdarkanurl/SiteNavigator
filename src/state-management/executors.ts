@@ -28,10 +28,13 @@ export function executeIntent(
     case "CLICK":
       return browserController.clickOnAButton(intent.payload.element)
 
+    case "MOVE_BACK":
+      return browserController.moveBack();
+
     case "HELP":
       return {
         success: true,
-        message: "Available commands: navigate, capture, click, show, help, exit",
+        message: "Available commands: navigate, click, show, move back, help, exit",
       };
 
     case "EXIT":

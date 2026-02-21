@@ -3,6 +3,7 @@ export type Intent =
   | ShowCodeIntent
   | ShowElementsIntent
   | ClickIntent
+  | MoveBackIntent
   | HelpIntent
   | ExitIntent;
 
@@ -35,6 +36,10 @@ export type ClickIntent = {
     target: "click";
     element: string
   };
+};
+
+export type MoveBackIntent = {
+  type: "MOVE_BACK";
 };
 
 export type HelpIntent = {

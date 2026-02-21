@@ -10,6 +10,7 @@ export function dispatchIntent(
   switch (intent.type) {
     case "SHOW":
     case "CLICK":
+    case "MOVE_BACK":
       if (!state.pageLoaded) {
         return {
           success: false,

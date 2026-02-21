@@ -234,6 +234,23 @@ export class BrowserController {
         }
     }
 
+    async moveBack(): Promise<DispatchResult> {
+        const page = await this.ensurePage();
+        const res = await page.goBack();
+
+        if (!res) {
+            return {
+                success: false,
+                error: `Cannot move back from the current page`
+            };
+        }
+
+        return {
+            success: true,
+            message: `Moved back successfully`
+        };
+    }
+
     async close(): Promise<void> {
         if (this.page) {
             await this.page.close();

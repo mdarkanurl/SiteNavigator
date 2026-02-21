@@ -93,7 +93,7 @@ export function parseInput(line: string): ParseResult {
       }
     }
 
-    case "click":
+    case "click": {
       if(!args[0]) {
         return {
           success: false,
@@ -108,6 +108,21 @@ export function parseInput(line: string): ParseResult {
           payload: { target: "click", element: args[0] },
         },
       };
+    }
+
+    case "move": {
+      if (args[0] !== "back") {
+        return {
+          success: false,
+          error: "move supports one command: move back"
+        };
+      }
+
+      return {
+        success: true,
+        intent: { type: "MOVE_BACK" }
+      };
+    }
 
     case "help":
       return {
