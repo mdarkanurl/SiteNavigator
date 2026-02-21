@@ -10,3 +10,16 @@ export type InteractiveItem = {
   resolvedHref: string | null;
   selector: string;
 };
+
+export type WaitTarget =
+  | {
+      mode: "url";
+      pattern: string;
+      timeoutMs: number;
+    }
+  | {
+      mode: "selector";
+      selector: string;
+      state: "attached" | "detached" | "visible" | "hidden";
+      timeoutMs: number;
+    };

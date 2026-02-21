@@ -3,7 +3,7 @@ import { DispatchResult } from "../state-management/dispatch-result";
 import { browserPool } from "./browser/browser-pool";
 import { NavigationService } from "./browser/navigation-service";
 import { InteractionService } from "./browser/interaction-service";
-import { ClickTarget } from "./browser/types";
+import { ClickTarget, WaitTarget } from "./browser/types";
 
 export class BrowserController {
   private page: Page | null = null;
@@ -69,6 +69,10 @@ export class BrowserController {
 
   async click(target: ClickTarget): Promise<DispatchResult> {
     return this.interactionService.click(target);
+  }
+
+  async wait(target: WaitTarget): Promise<DispatchResult> {
+    return this.interactionService.wait(target);
   }
 
   async moveBack(): Promise<DispatchResult> {

@@ -10,6 +10,7 @@ import { parseAct } from "./parsers/parse-act";
 import { parseMove } from "./parsers/parse-move";
 import { parsePrint } from "./parsers/parse-print";
 import { parseScreenshot } from "./parsers/parse-screenshot";
+import { parseWait } from "./parsers/parse-wait";
 
 export function parseInput(line: string): ParseResult {
   const trimmed = line.trim();
@@ -49,6 +50,9 @@ export function parseInput(line: string): ParseResult {
 
     case "move":
       return parseMove(args);
+
+    case "wait":
+      return parseWait(args);
 
     case "reload":
       return {

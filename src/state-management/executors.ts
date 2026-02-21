@@ -49,6 +49,9 @@ export function executeIntent(
     case "ACT":
       return browserController.act(intent.payload.id);
 
+    case "WAIT":
+      return browserController.wait(intent.payload.target);
+
     case "MOVE_BACK":
       return browserController.moveBack();
 
@@ -72,7 +75,7 @@ export function executeIntent(
     case "HELP":
       return {
         success: true,
-        message: "Available commands: navigate, open, links, follow, act, click, show, move back, move forward, reload, print url, print title, screenshot, help, exit",
+        message: "Available commands: navigate, open, links, follow, act, wait, click, show, move back, move forward, reload, print url, print title, screenshot, help, exit",
       };
 
     case "EXIT":

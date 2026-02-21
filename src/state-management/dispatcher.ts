@@ -13,6 +13,7 @@ export function dispatchIntent(
     case "LINKS":
     case "FOLLOW":
     case "ACT":
+    case "WAIT":
     case "MOVE_BACK":
     case "MOVE_FORWARD":
     case "RELOAD":

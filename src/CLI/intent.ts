@@ -7,6 +7,7 @@ export type Intent =
   | LinksIntent
   | FollowIntent
   | ActIntent
+  | WaitIntent
   | MoveBackIntent
   | MoveForwardIntent
   | ReloadIntent
@@ -75,6 +76,26 @@ export type ActIntent = {
   payload: {
     id: number;
   };
+};
+
+export type WaitIntent = {
+  type: "WAIT";
+  payload:
+    | {
+        target: {
+          mode: "url";
+          pattern: string;
+          timeoutMs: number;
+        };
+      }
+    | {
+        target: {
+          mode: "selector";
+          selector: string;
+          state: "attached" | "detached" | "visible" | "hidden";
+          timeoutMs: number;
+        };
+      };
 };
 
 export type MoveBackIntent = {

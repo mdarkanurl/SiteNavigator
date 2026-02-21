@@ -11,6 +11,7 @@ It uses Playwright (via Crawlee's `BrowserPool`) to navigate websites, inspect p
 - Extract visible interactive elements and optionally save them to a file
 - List interactive elements with IDs (`links`) and execute by ID (`act`)
 - Follow links by partial href/text pattern (`follow`)
+- Wait for URL patterns or selector states (`wait`)
 - Click by selector, text, href, or index (`click` modes)
 - Move one step back in browser history (`move back`)
 - Move one step forward in browser history (`move forward`)
@@ -109,6 +110,14 @@ npm start
 `follow "<pattern>"`
 - Finds first anchor matching text/href pattern and navigates to it
 
+`wait url "<pattern>" [--timeout <ms>]`
+- Waits until current page URL contains `<pattern>`
+- Default timeout is `10000` ms
+
+`wait selector "<css>" [--state attached|detached|visible|hidden] [--timeout <ms>]`
+- Waits for selector to reach requested state
+- Default state is `visible`, default timeout is `10000` ms
+
 `move back`
 - Moves one step back in browser history
 
@@ -153,6 +162,9 @@ Action successful
 > click --text "More information"
 Action successful
 
+> wait selector "h1" --state visible --timeout 8000
+Waited for selector: h1
+
 > move back
 Moved back successfully
 
@@ -166,7 +178,7 @@ Goodbye!
 ## Notes and Current Behavior
 
 - Browser launches in headed mode (`headless: false`).
-- `SHOW`, `CLICK`, `MOVE_BACK`, `MOVE_FORWARD`, `RELOAD`, `PRINT`, and `SCREENSHOT` are blocked until at least one successful `navigate` command is issued.
+- `SHOW`, `CLICK`, `LINKS`, `FOLLOW`, `ACT`, `WAIT`, `MOVE_BACK`, `MOVE_FORWARD`, `RELOAD`, `PRINT`, and `SCREENSHOT` are blocked until at least one successful `navigate` command is issued.
 - `Dockerfile` exists but is currently empty.
 - Project currently has no automated tests (`npm test` is a placeholder).
 

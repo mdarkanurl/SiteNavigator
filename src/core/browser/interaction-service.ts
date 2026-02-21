@@ -1,7 +1,7 @@
 import { Locator, Page } from "playwright";
 import { DispatchResult } from "../../state-management/dispatch-result";
 import { writeFile } from "node:fs/promises";
-import { ClickTarget, InteractiveItem } from "./types";
+import { ClickTarget, InteractiveItem, WaitTarget } from "./types";
 
 export class InteractionService {
   private lastInteractiveItems: InteractiveItem[] = [];
@@ -344,5 +344,57 @@ export class InteractionService {
       value: target.value,
       matched,
     });
+  }
+
+  async wait(target: WaitTarget): Promise<DispatchResult> {
+    const page = await this.getPage();
+    const startedAt = Date.now();
+
+    try {
+      if (target.mode === "url") {
+        const expected = target.pattern.toLowerCase();
+        await page.waitForFunction(
+          (needle) => window.location.href.toLowerCase().includes(needle),
+          expected,
+          { timeout: target.timeoutMs }
+        );
+
+        return {
+          success: true,
+          message: `Waited for URL pattern: ${target.pattern}`,
+          data: {
+            mode: target.mode,
+            pattern: target.pattern,
+            timeoutMs: target.timeoutMs,
+            elapsedMs: Date.now() - startedAt,
+            currentUrl: page.url(),
+          },
+        };
+      }
+
+      const locator = page.locator(target.selector);
+      await locator.first().waitFor({
+        state: target.state,
+        timeout: target.timeoutMs,
+      });
+
+      return {
+        success: true,
+        message: `Waited for selector: ${target.selector}`,
+        data: {
+          mode: target.mode,
+          selector: target.selector,
+          state: target.state,
+          timeoutMs: target.timeoutMs,
+          elapsedMs: Date.now() - startedAt,
+          matchedCount: await locator.count(),
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: `Wait failed for ${target.mode}. Timeout: ${target.timeoutMs}ms`,
+      };
+    }
   }
 }
