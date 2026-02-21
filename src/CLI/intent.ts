@@ -6,6 +6,7 @@ export type Intent =
   | MoveBackIntent
   | MoveForwardIntent
   | ReloadIntent
+  | PrintIntent
   | HelpIntent
   | ExitIntent;
 
@@ -50,6 +51,13 @@ export type MoveForwardIntent = {
 
 export type ReloadIntent = {
   type: "RELOAD";
+};
+
+export type PrintIntent = {
+  type: "PRINT";
+  payload: {
+    target: "url" | "title";
+  };
 };
 
 export type HelpIntent = {

@@ -310,6 +310,28 @@ export class BrowserController {
         };
     }
 
+    async getCurrentUrl(): Promise<DispatchResult> {
+        const page = await this.ensurePage();
+        const url = page.url();
+
+        return {
+            success: true,
+            message: `Current URL`,
+            data: url
+        };
+    }
+
+    async getCurrentTitle(): Promise<DispatchResult> {
+        const page = await this.ensurePage();
+        const title = await page.title();
+
+        return {
+            success: true,
+            message: `Current title`,
+            data: title
+        };
+    }
+
     async close(): Promise<void> {
         if (this.page) {
             await this.page.close();

@@ -37,10 +37,18 @@ export function executeIntent(
     case "RELOAD":
       return browserController.reload();
 
+    case "PRINT":
+      if (intent.payload.target === "url") {
+        return browserController.getCurrentUrl();
+      } else if (intent.payload.target === "title") {
+        return browserController.getCurrentTitle();
+      }
+      return { success: false, error: "Invalid PRINT target" };
+
     case "HELP":
       return {
         success: true,
-        message: "Available commands: navigate, click, show, move back, move forward, reload, help, exit",
+        message: "Available commands: navigate, click, show, move back, move forward, reload, print url, print title, help, exit",
       };
 
     case "EXIT":

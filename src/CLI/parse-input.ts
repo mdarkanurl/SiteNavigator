@@ -130,6 +130,23 @@ export function parseInput(line: string): ParseResult {
         intent: { type: "RELOAD" }
       };
 
+    case "print": {
+      if (args[0] !== "url" && args[0] !== "title") {
+        return {
+          success: false,
+          error: "print supports two commands: print url & print title"
+        };
+      }
+
+      return {
+        success: true,
+        intent: {
+          type: "PRINT",
+          payload: { target: args[0] === "url" ? "url" : "title" }
+        }
+      };
+    }
+
     case "help":
       return {
         success: true,

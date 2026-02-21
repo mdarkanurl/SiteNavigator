@@ -13,6 +13,7 @@ export function dispatchIntent(
     case "MOVE_BACK":
     case "MOVE_FORWARD":
     case "RELOAD":
+    case "PRINT":
       if (!state.pageLoaded) {
         return {
           success: false,
