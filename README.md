@@ -87,8 +87,11 @@ npm start
 
 `input <field> <value> ... <submit-button-text>`
 - Fills one or more form fields by matching field name against label, placeholder, aria-label, name, or id
+- Supports explicit field targeting with `--selector <css> <value>` and `--index <id> <value>` (index from latest `links`)
 - Uses the last argument as submit target text and clicks the first visible matching button/link
 - Example: `input username "my_user" password "my_pass" "Log in"`
+- Example (selector): `input --selector "#email" "my_user" --selector "#password" "my_pass" "Log in"`
+- Example (index): `links` then `input --index 3 "my_user" --index 5 "my_pass" "Log in"`
 
 `click <selector>`
 - Clicks first matching element for the selector

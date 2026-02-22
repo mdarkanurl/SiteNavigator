@@ -193,6 +193,23 @@ Example:
 Action successful
 ```
 
+Alternative targeting modes:
+- `--selector <css> <value>` for explicit CSS targeting
+- `--index <id> <value>` where `id` comes from latest `links` output
+
+Examples:
+
+```text
+> input --selector "#email" "john@example.com" --selector "#password" "s3cr3t" "Log in"
+Action successful
+
+> links
+Found 15 interactive elements
+
+> input --index 4 "john@example.com" --index 7 "s3cr3t" "Log in"
+Action successful
+```
+
 ## 10) `click --selector "<css>"`
 
 Purpose: Explicit selector-mode click.
