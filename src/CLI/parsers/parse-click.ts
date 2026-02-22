@@ -8,6 +8,13 @@ export function parseClick(args: string[]): ParseResult {
     };
   }
 
+  if (!args[0].startsWith("--")) {
+    return {
+      success: false,
+      error: "Unknown click mode. Use --selector --text --href or --index",
+    };
+  }
+
   if (args[0] === "--selector") {
     const value = args.slice(1).join(" ").trim();
     if (!value) {
@@ -73,18 +80,8 @@ export function parseClick(args: string[]): ParseResult {
     };
   }
 
-  if (args[0].startsWith("--")) {
-    return {
-      success: false,
-      error: "Unknown click mode. Use --selector --text --href or --index",
-    };
-  }
-
   return {
-    success: true,
-    intent: {
-      type: "CLICK",
-      payload: { target: { mode: "selector", value: args.join(" ") } },
-    },
+    success: false,
+    error: "Unknown click mode. Use --selector --text --href or --index",
   };
 }
