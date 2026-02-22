@@ -4,7 +4,7 @@
   "description": "This is a project that controls a browser with code",
   "main": "index.js",
   "scripts": {
-    "test": "",
+    "test": "jest --runInBand",
     "dev": "ts-node src/CLI/index.ts",
     "build": "tsc",
     "start": "node dist/CLI/index.js"
@@ -20,6 +20,7 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^25.1.0",
     "jest": "^30.2.0",
+    "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },
