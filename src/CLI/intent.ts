@@ -51,7 +51,10 @@ export type InputIntent = {
   type: "INPUT";
   payload: {
     fields: Array<{
-      name: string;
+      target:
+        | { mode: "text"; value: string }
+        | { mode: "selector"; value: string }
+        | { mode: "index"; value: number };
       value: string;
     }>;
     submitText: string;

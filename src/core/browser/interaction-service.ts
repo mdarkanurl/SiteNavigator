@@ -3,6 +3,11 @@ import { DispatchResult } from "../../state-management/dispatch-result";
 import { writeFile } from "node:fs/promises";
 import { ClickTarget, FillableField, InteractiveItem, WaitTarget } from "./types";
 
+type InputFieldTarget =
+  | { mode: "text"; value: string }
+  | { mode: "selector"; value: string }
+  | { mode: "index"; value: number };
+
 export class InteractionService {
   private lastInteractiveItems: InteractiveItem[] = [];
 
@@ -138,6 +143,65 @@ export class InteractionService {
         })
       ) ?? null
     );
+  }
+
+  private async fillByLocator(locator: Locator, value: string): Promise<boolean> {
+    const count = await locator.count();
+    if (count === 0) {
+      return false;
+    }
+
+    const target = locator.first();
+
+    try {
+      await target.scrollIntoViewIfNeeded();
+      await target.waitFor({ state: "visible", timeout: 7000 });
+
+      const tag = await target.evaluate((el) => el.tagName.toLowerCase());
+
+      if (tag === "select") {
+        await target.selectOption({ label: value }).catch(async () => {
+          await target.selectOption({ value });
+        });
+      } else if (tag === "input" || tag === "textarea") {
+        await target.fill(value);
+      } else {
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  private async resolveFieldLocator(target: InputFieldTarget): Promise<Locator | null> {
+    const page = await this.getPage();
+
+    if (target.mode === "selector") {
+      return page.locator(target.value).first();
+    }
+
+    if (target.mode === "index") {
+      if (this.lastInteractiveItems.length === 0) {
+        await this.listLinks(null);
+      }
+
+      const matched = this.lastInteractiveItems.find((item) => item.id === target.value);
+      if (!matched) {
+        return null;
+      }
+
+      return page.locator(matched.selector).first();
+    }
+
+    const fillableFields = await this.collectFillableFields();
+    const matched = this.findFieldByName(fillableFields, target.value);
+    if (!matched) {
+      return null;
+    }
+
+    return page.locator(matched.selector).first();
   }
 
   private async collectInteractiveItems(): Promise<InteractiveItem[]> {
@@ -511,36 +575,32 @@ export class InteractionService {
     }
   }
 
-  async input(fields: Array<{ name: string; value: string }>, submitText: string): Promise<DispatchResult> {
+  async input(
+    fields: Array<{
+      target:
+        | { mode: "text"; value: string }
+        | { mode: "selector"; value: string }
+        | { mode: "index"; value: number };
+      value: string;
+    }>,
+    submitText: string
+  ): Promise<DispatchResult> {
     const page = await this.getPage();
-    const availableFields = await this.collectFillableFields();
 
     for (const field of fields) {
-      const matched = this.findFieldByName(availableFields, field.name);
-      if (!matched) {
+      const locator = await this.resolveFieldLocator(field.target);
+      if (!locator) {
         return {
           success: false,
-          error: `No input field found for: ${field.name}`,
+          error: `No input field found for target: ${field.target.mode} ${String(field.target.value)}`,
         };
       }
 
-      const locator = page.locator(matched.selector).first();
-
-      try {
-        await locator.scrollIntoViewIfNeeded();
-        await locator.waitFor({ state: "visible", timeout: 7000 });
-
-        if (matched.tag === "select") {
-          await locator.selectOption({ label: field.value }).catch(async () => {
-            await locator.selectOption({ value: field.value });
-          });
-        } else {
-          await locator.fill(field.value);
-        }
-      } catch (error) {
+      const filled = await this.fillByLocator(locator, field.value);
+      if (!filled) {
         return {
           success: false,
-          error: `Failed to set value for field: ${field.name}`,
+          error: `Failed to set value for target: ${field.target.mode} ${String(field.target.value)}`,
         };
       }
     }

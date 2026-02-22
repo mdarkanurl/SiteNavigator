@@ -55,7 +55,16 @@ export class BrowserController {
     return this.interactionService.getAllElements(fileName);
   }
 
-  async input(fields: Array<{ name: string; value: string }>, submitText: string): Promise<DispatchResult> {
+  async input(
+    fields: Array<{
+      target:
+        | { mode: "text"; value: string }
+        | { mode: "selector"; value: string }
+        | { mode: "index"; value: number };
+      value: string;
+    }>,
+    submitText: string
+  ): Promise<DispatchResult> {
     return this.interactionService.input(fields, submitText);
   }
 
