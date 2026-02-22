@@ -1,12 +1,16 @@
 import { Locator, Page } from "playwright";
 import { DispatchResult } from "../../state-management/dispatch-result";
 import { writeFile } from "node:fs/promises";
-import { ClickTarget, FillableField, InteractiveItem, WaitTarget } from "./types";
-
-type InputFieldTarget =
-  | { mode: "text"; value: string }
-  | { mode: "selector"; value: string }
-  | { mode: "index"; value: number };
+import { ClickTarget, InputField, InputFieldTarget, InteractiveItem, WaitTarget } from "./types";
+import {
+  collectFillableFields,
+  collectInteractiveItems,
+  escapeForCss,
+  fillByLocator,
+  findFieldByName,
+  isAbsoluteHttpUrl,
+  normalizeText,
+} from "./interaction-helpers";
 
 export class InteractionService {
   private lastInteractiveItems: InteractiveItem[] = [];
@@ -22,157 +26,6 @@ export class InteractionService {
 
   private normalizeFileName(fileName: string): string {
     return fileName.replace("--", "");
-  }
-
-  private static isAbsoluteHttpUrl(value: string): boolean {
-    return value.startsWith("http://") || value.startsWith("https://");
-  }
-
-  private static escapeForCss(value: string): string {
-    return value.replace(/\\/g, "\\\\").replace(/"/g, "\\\"");
-  }
-
-  private static normalizeText(value: string): string {
-    return value.replace(/\s+/g, " ").trim().toLowerCase();
-  }
-
-  private async collectFillableFields(): Promise<FillableField[]> {
-    const page = await this.getPage();
-
-    return page.evaluate(() => {
-      const cssEscape = (globalThis as any).CSS?.escape
-        ? (globalThis as any).CSS.escape.bind((globalThis as any).CSS)
-        : (value: string) => value.replace(/[^a-zA-Z0-9_-]/g, "");
-
-      const toCssPath = (el: Element): string => {
-        if ((el as HTMLElement).id) {
-          return `#${cssEscape((el as HTMLElement).id)}`;
-        }
-
-        const parts: string[] = [];
-        let current: Element | null = el;
-
-        while (current && current.nodeType === 1 && current.tagName.toLowerCase() !== "html") {
-          const tag = current.tagName.toLowerCase();
-          const parentElement: Element | null = current.parentElement;
-          if (!parentElement) {
-            parts.unshift(tag);
-            break;
-          }
-
-          const siblings = Array.from(parentElement.children as HTMLCollectionOf<Element>).filter(
-            (child: Element) => child.tagName === current!.tagName
-          );
-          const index = siblings.indexOf(current) + 1;
-          parts.unshift(`${tag}:nth-of-type(${index})`);
-
-          current = parentElement;
-        }
-
-        return parts.join(" > ");
-      };
-
-      const controls = Array.from(document.querySelectorAll("input, textarea, select"))
-        .filter((el) => {
-          const input = el as HTMLInputElement;
-          if (input.disabled) return false;
-          if (input.type === "hidden") return false;
-
-          const element = el as HTMLElement;
-          const style = window.getComputedStyle(element);
-          const hiddenByStyle =
-            style.display === "none" || style.visibility === "hidden" || Number(style.opacity) === 0;
-
-          return !hiddenByStyle && element.getClientRects().length > 0;
-        })
-        .map((el) => {
-          const input = el as HTMLInputElement;
-          const id = input.id || "";
-          const labelsByFor = id
-            ? Array.from(document.querySelectorAll(`label[for="${cssEscape(id)}"]`)).map((l) =>
-                ((l as HTMLElement).innerText || l.textContent || "").trim()
-              )
-            : [];
-
-          const wrappedLabel = input.closest("label");
-          const wrappedLabelText = wrappedLabel
-            ? ((wrappedLabel as HTMLElement).innerText || wrappedLabel.textContent || "").trim()
-            : "";
-
-          const candidates = [
-            ...labelsByFor,
-            wrappedLabelText,
-            input.getAttribute("aria-label") || "",
-            input.getAttribute("placeholder") || "",
-            input.getAttribute("name") || "",
-            input.id || "",
-          ]
-            .map((value) => value.replace(/\s+/g, " ").trim())
-            .filter(Boolean);
-
-          return {
-            selector: toCssPath(el),
-            tag: el.tagName.toLowerCase(),
-            type: input.type || null,
-            candidates,
-          };
-        });
-
-      return controls;
-    });
-  }
-
-  private findFieldByName(fields: FillableField[], fieldName: string): FillableField | null {
-    const wanted = InteractionService.normalizeText(fieldName);
-    if (!wanted) {
-      return null;
-    }
-
-    const exact = fields.find((field) =>
-      field.candidates.some((candidate) => InteractionService.normalizeText(candidate) === wanted)
-    );
-    if (exact) {
-      return exact;
-    }
-
-    return (
-      fields.find((field) =>
-        field.candidates.some((candidate) => {
-          const normalizedCandidate = InteractionService.normalizeText(candidate);
-          return normalizedCandidate.includes(wanted) || wanted.includes(normalizedCandidate);
-        })
-      ) ?? null
-    );
-  }
-
-  private async fillByLocator(locator: Locator, value: string): Promise<boolean> {
-    const count = await locator.count();
-    if (count === 0) {
-      return false;
-    }
-
-    const target = locator.first();
-
-    try {
-      await target.scrollIntoViewIfNeeded();
-      await target.waitFor({ state: "visible", timeout: 7000 });
-
-      const tag = await target.evaluate((el) => el.tagName.toLowerCase());
-
-      if (tag === "select") {
-        await target.selectOption({ label: value }).catch(async () => {
-          await target.selectOption({ value });
-        });
-      } else if (tag === "input" || tag === "textarea") {
-        await target.fill(value);
-      } else {
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      return false;
-    }
   }
 
   private async resolveFieldLocator(target: InputFieldTarget): Promise<Locator | null> {
@@ -195,103 +48,13 @@ export class InteractionService {
       return page.locator(matched.selector).first();
     }
 
-    const fillableFields = await this.collectFillableFields();
-    const matched = this.findFieldByName(fillableFields, target.value);
+    const fillableFields = await collectFillableFields(page);
+    const matched = findFieldByName(fillableFields, target.value);
     if (!matched) {
       return null;
     }
 
     return page.locator(matched.selector).first();
-  }
-
-  private async collectInteractiveItems(): Promise<InteractiveItem[]> {
-    const page = await this.getPage();
-
-    const rawItems = await page.evaluate(() => {
-      const cssEscape = (globalThis as any).CSS?.escape
-        ? (globalThis as any).CSS.escape.bind((globalThis as any).CSS)
-        : (value: string) => value.replace(/[^a-zA-Z0-9_-]/g, "");
-
-      const toCssPath = (el: Element): string => {
-        if ((el as HTMLElement).id) {
-          return `#${cssEscape((el as HTMLElement).id)}`;
-        }
-
-        const parts: string[] = [];
-        let current: Element | null = el;
-
-        while (current && current.nodeType === 1 && current.tagName.toLowerCase() !== "html") {
-          const tag = current.tagName.toLowerCase();
-          const parentElement: Element | null = current.parentElement;
-          if (!parentElement) {
-            parts.unshift(tag);
-            break;
-          }
-
-          const siblings = Array.from(parentElement.children as HTMLCollectionOf<Element>).filter(
-            (child: Element) => child.tagName === current!.tagName
-          );
-          const index = siblings.indexOf(current) + 1;
-          parts.unshift(`${tag}:nth-of-type(${index})`);
-
-          current = parentElement;
-        }
-
-        return parts.join(" > ");
-      };
-
-      const interactive = document.querySelectorAll(
-        "a, button, input, textarea, select, [onclick], [role='button']"
-      );
-
-      return Array.from(interactive)
-        .filter((el) => {
-          const element = el as HTMLElement;
-          const style = window.getComputedStyle(element);
-          const hiddenByStyle =
-            style.display === "none" || style.visibility === "hidden" || Number(style.opacity) === 0;
-          return !hiddenByStyle && element.getClientRects().length > 0;
-        })
-        .map((el) => {
-          const element = el as HTMLElement;
-          const href = el.getAttribute("href");
-
-          let resolvedHref: string | null = null;
-          if (href) {
-            try {
-              resolvedHref = new URL(href, window.location.href).toString();
-            } catch (error) {
-              resolvedHref = null;
-            }
-          }
-
-          return {
-            tag: el.tagName.toLowerCase(),
-            text: (
-              element.innerText ||
-              element.textContent ||
-              element.getAttribute("aria-label") ||
-              element.getAttribute("title") ||
-              element.getAttribute("value") ||
-              ""
-            )
-              .replace(/\s+/g, " ")
-              .trim(),
-            href,
-            resolvedHref,
-            selector: toCssPath(el),
-          };
-        });
-    });
-
-    return rawItems.map((item, index) => ({
-      id: index,
-      tag: item.tag,
-      text: item.text,
-      href: item.href,
-      resolvedHref: item.resolvedHref,
-      selector: item.selector,
-    }));
   }
 
   private async clickLocator(locator: Locator, metadata: Record<string, unknown>): Promise<DispatchResult> {
@@ -358,7 +121,8 @@ export class InteractionService {
   }
 
   async getAllElements(fileName: string | null): Promise<DispatchResult> {
-    const elements = await this.collectInteractiveItems();
+    const page = await this.getPage();
+    const elements = await collectInteractiveItems(page);
 
     if (fileName) {
       const finalFileName = this.normalizeFileName(fileName);
@@ -380,7 +144,8 @@ export class InteractionService {
   }
 
   async listLinks(filter: string | null): Promise<DispatchResult> {
-    const interactiveItems = await this.collectInteractiveItems();
+    const page = await this.getPage();
+    const interactiveItems = await collectInteractiveItems(page);
 
     const filteredItems = filter
       ? interactiveItems.filter((item) => {
@@ -406,7 +171,8 @@ export class InteractionService {
   }
 
   async follow(pattern: string): Promise<DispatchResult> {
-    const interactiveItems = await this.collectInteractiveItems();
+    const page = await this.getPage();
+    const interactiveItems = await collectInteractiveItems(page);
     const normalizedPattern = pattern.toLowerCase();
 
     const matched = interactiveItems.find(
@@ -424,7 +190,7 @@ export class InteractionService {
       };
     }
 
-    if (matched.resolvedHref && InteractionService.isAbsoluteHttpUrl(matched.resolvedHref)) {
+    if (matched.resolvedHref && isAbsoluteHttpUrl(matched.resolvedHref)) {
       const result = await this.openTarget(matched.resolvedHref);
       if (!result.success) {
         return result;
@@ -437,7 +203,6 @@ export class InteractionService {
       };
     }
 
-    const page = await this.getPage();
     return this.clickLocator(page.locator(matched.selector), {
       mode: "follow",
       pattern,
@@ -461,7 +226,7 @@ export class InteractionService {
       };
     }
 
-    if (matched.resolvedHref && InteractionService.isAbsoluteHttpUrl(matched.resolvedHref)) {
+    if (matched.resolvedHref && isAbsoluteHttpUrl(matched.resolvedHref)) {
       return this.openTarget(matched.resolvedHref);
     }
 
@@ -495,7 +260,7 @@ export class InteractionService {
     }
 
     if (target.mode === "href") {
-      const escaped = InteractionService.escapeForCss(target.value);
+      const escaped = escapeForCss(target.value);
       const locator = page.locator(`a[href*="${escaped}"]`);
 
       return this.clickLocator(locator, {
@@ -576,13 +341,7 @@ export class InteractionService {
   }
 
   async input(
-    fields: Array<{
-      target:
-        | { mode: "text"; value: string }
-        | { mode: "selector"; value: string }
-        | { mode: "index"; value: number };
-      value: string;
-    }>,
+    fields: InputField[],
     submitText: string
   ): Promise<DispatchResult> {
     const page = await this.getPage();
@@ -596,7 +355,7 @@ export class InteractionService {
         };
       }
 
-      const filled = await this.fillByLocator(locator, field.value);
+      const filled = await fillByLocator(locator, field.value);
       if (!filled) {
         return {
           success: false,
@@ -605,8 +364,8 @@ export class InteractionService {
       }
     }
 
-    const interactiveItems = await this.collectInteractiveItems();
-    const normalizedSubmitText = InteractionService.normalizeText(submitText);
+    const interactiveItems = await collectInteractiveItems(page);
+    const normalizedSubmitText = normalizeText(submitText);
 
     const matchedSubmit = interactiveItems.find((item) => {
       if (
@@ -618,7 +377,7 @@ export class InteractionService {
         return false;
       }
 
-      const text = InteractionService.normalizeText(item.text);
+      const text = normalizeText(item.text);
       return text.includes(normalizedSubmitText) || normalizedSubmitText.includes(text);
     });
 

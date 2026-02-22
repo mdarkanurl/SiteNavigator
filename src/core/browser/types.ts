@@ -1,6 +1,8 @@
-import type { ClickIntent } from "../../CLI/intent";
+import type { ClickIntent, InputIntent } from "../../CLI/intent";
 
 export type ClickTarget = ClickIntent["payload"]["target"];
+export type InputField = InputIntent["payload"]["fields"][number];
+export type InputFieldTarget = InputField["target"];
 
 export type InteractiveItem = {
   id: number;

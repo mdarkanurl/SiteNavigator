@@ -3,7 +3,7 @@ import { DispatchResult } from "../state-management/dispatch-result";
 import { browserPool } from "./browser/browser-pool";
 import { NavigationService } from "./browser/navigation-service";
 import { InteractionService } from "./browser/interaction-service";
-import { ClickTarget, WaitTarget } from "./browser/types";
+import { ClickTarget, InputField, WaitTarget } from "./browser/types";
 
 export class BrowserController {
   private page: Page | null = null;
@@ -56,13 +56,7 @@ export class BrowserController {
   }
 
   async input(
-    fields: Array<{
-      target:
-        | { mode: "text"; value: string }
-        | { mode: "selector"; value: string }
-        | { mode: "index"; value: number };
-      value: string;
-    }>,
+    fields: InputField[],
     submitText: string
   ): Promise<DispatchResult> {
     return this.interactionService.input(fields, submitText);
