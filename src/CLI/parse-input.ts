@@ -3,6 +3,7 @@ import { ParseResult } from "./parse-result";
 import { parseNavigate } from "./parsers/parse-navigate";
 import { parseOpen } from "./parsers/parse-open";
 import { parseShow } from "./parsers/parse-show";
+import { parseInput as parseInputCommand } from "./parsers/parse-input";
 import { parseClick } from "./parsers/parse-click";
 import { parseLinks } from "./parsers/parse-links";
 import { parseFollow } from "./parsers/parse-follow";
@@ -35,6 +36,9 @@ export function parseInput(line: string): ParseResult {
 
     case "show":
       return parseShow(args);
+
+    case "input":
+      return parseInputCommand(args);
 
     case "click":
       return parseClick(args);

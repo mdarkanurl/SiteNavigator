@@ -1,7 +1,7 @@
 import { Locator, Page } from "playwright";
 import { DispatchResult } from "../../state-management/dispatch-result";
 import { writeFile } from "node:fs/promises";
-import { ClickTarget, InteractiveItem, WaitTarget } from "./types";
+import { ClickTarget, FillableField, InteractiveItem, WaitTarget } from "./types";
 
 export class InteractionService {
   private lastInteractiveItems: InteractiveItem[] = [];
@@ -25,6 +25,119 @@ export class InteractionService {
 
   private static escapeForCss(value: string): string {
     return value.replace(/\\/g, "\\\\").replace(/"/g, "\\\"");
+  }
+
+  private static normalizeText(value: string): string {
+    return value.replace(/\s+/g, " ").trim().toLowerCase();
+  }
+
+  private async collectFillableFields(): Promise<FillableField[]> {
+    const page = await this.getPage();
+
+    return page.evaluate(() => {
+      const cssEscape = (globalThis as any).CSS?.escape
+        ? (globalThis as any).CSS.escape.bind((globalThis as any).CSS)
+        : (value: string) => value.replace(/[^a-zA-Z0-9_-]/g, "");
+
+      const toCssPath = (el: Element): string => {
+        if ((el as HTMLElement).id) {
+          return `#${cssEscape((el as HTMLElement).id)}`;
+        }
+
+        const parts: string[] = [];
+        let current: Element | null = el;
+
+        while (current && current.nodeType === 1 && current.tagName.toLowerCase() !== "html") {
+          const tag = current.tagName.toLowerCase();
+          const parentElement: Element | null = current.parentElement;
+          if (!parentElement) {
+            parts.unshift(tag);
+            break;
+          }
+
+          const siblings = Array.from(parentElement.children as HTMLCollectionOf<Element>).filter(
+            (child: Element) => child.tagName === current!.tagName
+          );
+          const index = siblings.indexOf(current) + 1;
+          parts.unshift(`${tag}:nth-of-type(${index})`);
+
+          current = parentElement;
+        }
+
+        return parts.join(" > ");
+      };
+
+      const controls = Array.from(document.querySelectorAll("input, textarea, select"))
+        .filter((el) => {
+          const input = el as HTMLInputElement;
+          if (input.disabled) return false;
+          if (input.type === "hidden") return false;
+
+          const element = el as HTMLElement;
+          const style = window.getComputedStyle(element);
+          const hiddenByStyle =
+            style.display === "none" || style.visibility === "hidden" || Number(style.opacity) === 0;
+
+          return !hiddenByStyle && element.getClientRects().length > 0;
+        })
+        .map((el) => {
+          const input = el as HTMLInputElement;
+          const id = input.id || "";
+          const labelsByFor = id
+            ? Array.from(document.querySelectorAll(`label[for="${cssEscape(id)}"]`)).map((l) =>
+                ((l as HTMLElement).innerText || l.textContent || "").trim()
+              )
+            : [];
+
+          const wrappedLabel = input.closest("label");
+          const wrappedLabelText = wrappedLabel
+            ? ((wrappedLabel as HTMLElement).innerText || wrappedLabel.textContent || "").trim()
+            : "";
+
+          const candidates = [
+            ...labelsByFor,
+            wrappedLabelText,
+            input.getAttribute("aria-label") || "",
+            input.getAttribute("placeholder") || "",
+            input.getAttribute("name") || "",
+            input.id || "",
+          ]
+            .map((value) => value.replace(/\s+/g, " ").trim())
+            .filter(Boolean);
+
+          return {
+            selector: toCssPath(el),
+            tag: el.tagName.toLowerCase(),
+            type: input.type || null,
+            candidates,
+          };
+        });
+
+      return controls;
+    });
+  }
+
+  private findFieldByName(fields: FillableField[], fieldName: string): FillableField | null {
+    const wanted = InteractionService.normalizeText(fieldName);
+    if (!wanted) {
+      return null;
+    }
+
+    const exact = fields.find((field) =>
+      field.candidates.some((candidate) => InteractionService.normalizeText(candidate) === wanted)
+    );
+    if (exact) {
+      return exact;
+    }
+
+    return (
+      fields.find((field) =>
+        field.candidates.some((candidate) => {
+          const normalizedCandidate = InteractionService.normalizeText(candidate);
+          return normalizedCandidate.includes(wanted) || wanted.includes(normalizedCandidate);
+        })
+      ) ?? null
+    );
   }
 
   private async collectInteractiveItems(): Promise<InteractiveItem[]> {
@@ -396,5 +509,71 @@ export class InteractionService {
         error: `Wait failed for ${target.mode}. Timeout: ${target.timeoutMs}ms`,
       };
     }
+  }
+
+  async input(fields: Array<{ name: string; value: string }>, submitText: string): Promise<DispatchResult> {
+    const page = await this.getPage();
+    const availableFields = await this.collectFillableFields();
+
+    for (const field of fields) {
+      const matched = this.findFieldByName(availableFields, field.name);
+      if (!matched) {
+        return {
+          success: false,
+          error: `No input field found for: ${field.name}`,
+        };
+      }
+
+      const locator = page.locator(matched.selector).first();
+
+      try {
+        await locator.scrollIntoViewIfNeeded();
+        await locator.waitFor({ state: "visible", timeout: 7000 });
+
+        if (matched.tag === "select") {
+          await locator.selectOption({ label: field.value }).catch(async () => {
+            await locator.selectOption({ value: field.value });
+          });
+        } else {
+          await locator.fill(field.value);
+        }
+      } catch (error) {
+        return {
+          success: false,
+          error: `Failed to set value for field: ${field.name}`,
+        };
+      }
+    }
+
+    const interactiveItems = await this.collectInteractiveItems();
+    const normalizedSubmitText = InteractionService.normalizeText(submitText);
+
+    const matchedSubmit = interactiveItems.find((item) => {
+      if (
+        item.tag !== "button" &&
+        item.tag !== "input" &&
+        item.tag !== "a" &&
+        item.tag !== "div"
+      ) {
+        return false;
+      }
+
+      const text = InteractionService.normalizeText(item.text);
+      return text.includes(normalizedSubmitText) || normalizedSubmitText.includes(text);
+    });
+
+    if (!matchedSubmit) {
+      return {
+        success: false,
+        error: `No submit button found with text: ${submitText}`,
+      };
+    }
+
+    return this.clickLocator(page.locator(matchedSubmit.selector), {
+      mode: "input",
+      fields,
+      submitText,
+      matchedSubmit,
+    });
   }
 }

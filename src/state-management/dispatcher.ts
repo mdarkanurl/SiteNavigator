@@ -9,6 +9,7 @@ export function dispatchIntent(
 ): Promise<DispatchResult> | DispatchResult {
   switch (intent.type) {
     case "SHOW":
+    case "INPUT":
     case "CLICK":
     case "LINKS":
     case "FOLLOW":

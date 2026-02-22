@@ -37,6 +37,9 @@ export function executeIntent(
       }
       return { success: false, error: "Invalid SHOW target" };
 
+    case "INPUT":
+      return browserController.input(intent.payload.fields, intent.payload.submitText);
+
     case "CLICK":
       return browserController.click(intent.payload.target);
 
@@ -75,7 +78,7 @@ export function executeIntent(
     case "HELP":
       return {
         success: true,
-        message: "Available commands: navigate, open, links, follow, act, wait, click, show, move back, move forward, reload, print url, print title, screenshot, help, exit",
+        message: "Available commands: navigate, open, show, input, links, follow, act, wait, click, move back, move forward, reload, print url, print title, screenshot, help, exit",
       };
 
     case "EXIT":

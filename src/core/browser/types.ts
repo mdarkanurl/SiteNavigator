@@ -23,3 +23,10 @@ export type WaitTarget =
       state: "attached" | "detached" | "visible" | "hidden";
       timeoutMs: number;
     };
+
+export type FillableField = {
+  selector: string;
+  tag: string;
+  type: string | null;
+  candidates: string[];
+};

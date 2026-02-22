@@ -3,6 +3,7 @@ export type Intent =
   | OpenIntent
   | ShowCodeIntent
   | ShowElementsIntent
+  | InputIntent
   | ClickIntent
   | LinksIntent
   | FollowIntent
@@ -43,6 +44,17 @@ export type ShowElementsIntent = {
   payload: {
     target: "elements";
     fileName: string | null;
+  };
+};
+
+export type InputIntent = {
+  type: "INPUT";
+  payload: {
+    fields: Array<{
+      name: string;
+      value: string;
+    }>;
+    submitText: string;
   };
 };
 
