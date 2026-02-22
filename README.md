@@ -9,6 +9,7 @@ It uses Playwright (via Crawlee's `BrowserPool`) to navigate websites, inspect p
 - Open absolute URLs or relative paths from current page (`open`)
 - Show current page HTML and save it to a file
 - Extract visible interactive elements and optionally save them to a file
+- Fill multiple form fields and submit by button text (`input`)
 - List interactive elements with IDs (`links`) and execute by ID (`act`)
 - Follow links by partial href/text pattern (`follow`)
 - Wait for URL patterns or selector states (`wait`)
@@ -84,6 +85,11 @@ npm start
 - Prints them in terminal
 - If file is provided, saves JSON to `<fileName>.js`
 
+`input <field> <value> ... <submit-button-text>`
+- Fills one or more form fields by matching field name against label, placeholder, aria-label, name, or id
+- Uses the last argument as submit target text and clicks the first visible matching button/link
+- Example: `input username "my_user" password "my_pass" "Log in"`
+
 `click <selector>`
 - Clicks first matching element for the selector
 - Returns whether navigation happened
@@ -152,6 +158,9 @@ navigate to https://example.com/
 Extracted 3 elements
 [ ... ]
 
+> input username "demo_user" password "demo_pass" "Log in"
+Action successful
+
 > links --filter iana
 Found 1 interactive elements
 [ { id: 0, ... } ]
@@ -178,7 +187,7 @@ Goodbye!
 ## Notes and Current Behavior
 
 - Browser launches in headed mode (`headless: false`).
-- `SHOW`, `CLICK`, `LINKS`, `FOLLOW`, `ACT`, `WAIT`, `MOVE_BACK`, `MOVE_FORWARD`, `RELOAD`, `PRINT`, and `SCREENSHOT` are blocked until at least one successful `navigate` command is issued.
+- `SHOW`, `INPUT`, `CLICK`, `LINKS`, `FOLLOW`, `ACT`, `WAIT`, `MOVE_BACK`, `MOVE_FORWARD`, `RELOAD`, `PRINT`, and `SCREENSHOT` are blocked until at least one successful `navigate` command is issued.
 - `Dockerfile` exists but is currently empty.
 - Project currently has no automated tests (`npm test` is a placeholder).
 

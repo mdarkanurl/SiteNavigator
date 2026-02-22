@@ -18,7 +18,7 @@ npm run dev
 
 3. Commands that require a loaded page:
 
-`show`, `click`, `links`, `follow`, `act`, `wait`, `move back`, `move forward`, `reload`, `print`, and `screenshot` only work after a successful `navigate` or `open`.
+`show`, `input`, `click`, `links`, `follow`, `act`, `wait`, `move back`, `move forward`, `reload`, `print`, and `screenshot` only work after a successful `navigate` or `open`.
 
 ## 1) `navigate <url>`
 
@@ -174,7 +174,26 @@ Example:
 Action successful
 ```
 
-## 9) `click --selector "<css>"`
+## 9) `input <field> <value> ... <submit-button-text>`
+
+Purpose: Fill multiple form fields and submit by matching button text.
+
+Use case: Login/signup/checkout forms where you know field names and submit label.
+
+End-to-end:
+1. Load a page containing the form.
+2. Run `input` with field-value pairs.
+3. Pass submit button text as the final argument.
+4. CLI fills fields and clicks the submit control.
+
+Example:
+
+```text
+> input username "john" password "s3cr3t" "Log in"
+Action successful
+```
+
+## 10) `click --selector "<css>"`
 
 Purpose: Explicit selector-mode click.
 
@@ -187,7 +206,7 @@ Example:
 Action successful
 ```
 
-## 10) `click --text "<text>"`
+## 11) `click --text "<text>"`
 
 Purpose: Click first visible interactive element with matching text.
 
@@ -200,7 +219,7 @@ Example:
 Action successful
 ```
 
-## 11) `click --href "<href-fragment>"`
+## 12) `click --href "<href-fragment>"`
 
 Purpose: Click first link whose `href` contains given fragment.
 
@@ -213,7 +232,7 @@ Example:
 Action successful
 ```
 
-## 12) `click --index <id>`
+## 13) `click --index <id>`
 
 Purpose: Click by ID from last cached interactive list.
 
@@ -233,7 +252,7 @@ Found 1 interactive elements
 Action successful
 ```
 
-## 13) `wait url "<pattern>" [--timeout <ms>]`
+## 14) `wait url "<pattern>" [--timeout <ms>]`
 
 Purpose: Wait until current URL contains a pattern.
 
@@ -254,7 +273,7 @@ Action successful
 Waited for URL pattern: /checkout
 ```
 
-## 14) `wait selector "<css>" [--state attached|detached|visible|hidden] [--timeout <ms>]`
+## 15) `wait selector "<css>" [--state attached|detached|visible|hidden] [--timeout <ms>]`
 
 Purpose: Wait for element lifecycle state.
 
@@ -275,7 +294,7 @@ Waited for selector: .results
 Waited for selector: .loading-spinner
 ```
 
-## 15) `move back`
+## 16) `move back`
 
 Purpose: Move one step back in browser history.
 
@@ -288,7 +307,7 @@ Example:
 Moved back successfully
 ```
 
-## 16) `move forward`
+## 17) `move forward`
 
 Purpose: Move one step forward in browser history.
 
@@ -301,7 +320,7 @@ Example:
 Moved forward successfully
 ```
 
-## 17) `reload`
+## 18) `reload`
 
 Purpose: Reload current page.
 
@@ -314,7 +333,7 @@ Example:
 Reloaded successfully
 ```
 
-## 18) `print url`
+## 19) `print url`
 
 Purpose: Print current page URL.
 
@@ -327,7 +346,7 @@ Example:
 https://example.com/pricing
 ```
 
-## 19) `print title`
+## 20) `print title`
 
 Purpose: Print current page title.
 
@@ -340,7 +359,7 @@ Example:
 Pricing - Example
 ```
 
-## 20) `screenshot --<fileName>`
+## 21) `screenshot --<fileName>`
 
 Purpose: Save a viewport screenshot to `<fileName>.png`.
 
@@ -359,7 +378,7 @@ Example:
 Screenshot saved: pricing-page.png
 ```
 
-## 21) `help`
+## 22) `help`
 
 Purpose: Print available commands.
 
@@ -369,10 +388,10 @@ Example:
 
 ```text
 > help
-Available commands: navigate, open, links, follow, act, wait, click, show, move back, move forward, reload, print url, print title, screenshot, help, exit
+Available commands: navigate, open, show, input, links, follow, act, wait, click, move back, move forward, reload, print url, print title, screenshot, help, exit
 ```
 
-## 22) `exit`
+## 23) `exit`
 
 Purpose: End the CLI session.
 
@@ -389,6 +408,7 @@ Goodbye!
 
 ```text
 > navigate https://example.com
+> input username "demo" password "demo123" "Log in"
 > show elements
 > links --filter more
 > act 0
@@ -399,12 +419,13 @@ Goodbye!
 
 What this does:
 1. Opens site.
-2. Discovers interactive elements.
-3. Filters likely target.
-4. Executes action by ID.
-5. Waits for content readiness.
-6. Verifies page title.
-7. Captures final screenshot.
+2. Submits a form using named fields.
+3. Discovers interactive elements.
+4. Filters likely target.
+5. Executes action by ID.
+6. Waits for content readiness.
+7. Verifies page title.
+8. Captures final screenshot.
 
 ## Full End-to-End Example 2 (Text + URL Synchronization)
 
@@ -456,3 +477,6 @@ Fix: Increase `--timeout`, verify selector correctness, or use `wait url` if nav
 
 4. Wrong element clicked by text.
 Fix: Use more specific text, `click --selector`, or `links` + `act` for deterministic targeting.
+
+5. Error: `input format: input <field> <value> ... <submit button text>`
+Fix: Ensure the last argument is submit text and all earlier arguments are valid field/value pairs.
